@@ -1,25 +1,34 @@
-$old_printserver = "ps01"
-$new_printserver = "ps02"
+$strNewPrintserver = "printserver01.xzy.de"
 
-# Alle Drucker auslesen, die als Netzwerkdrucker markiert sind und in ein Array speichern.
-$printers = @(Get-WMIObject Win32_Printer | where{$_.network -eq "true"} | Select-Object -expandProperty Name)
+# Prüft, ob das Skript bei diesem Benutzer bereits gelaufen ist
+If (-not (Test-Path "C:\Temp\$env:USERNAME-printers.txt")) {
 
+    Write-Host "Druckermigration wird gestartet..."
+ 
+    # Alle Drucker auslesen, die als Netzwerkdrucker markiert sind
+        Get-WMIObject Win32_Printer | where{$_.network -eq "true"} | Select ShareName, Default, Name | ForEach {
 
-# Standarddrucker auslesen und in eine Variable speichern
-$default_printer = Get-WMIObject Win32_Printer | where{$_.default -eq "true"} | Select-Object -expandProperty Name
+		# Ausgabe Freigabename
+        $_.ShareName
+		
+		# Ausgabe Standarddrucker
+        $_.Default
 
+        # Drucker löschen
+        (New-Object -ComObject WScript.Network).RemovePrinterConnection($_.Name)
 
-# Alle Drucker löschen, die im Array stehen.
-foreach($element in $printers) { (New-Object -ComObject WScript.Network).RemovePrinterConnection("$element") }
+        # Neue Drucker anlegen
+        $printer = [WMIClass]"\\.\root\cimv2:Win32_Printer"
+        $printer.AddPrinterConnection("\\" + $strNewPrintserver + "\" + $_.Sharename)
 
+		# Standarddrucker einrichten
+        if($_.Default -eq $true) {
 
-# Neue Drucker anlegen, welche im Array stehen.
-$printer = [WMIClass]"\\.\root\cimv2:Win32_Printer"
-foreach($element in $printers) { $printer.AddPrinterConnection($element.replace("$old_printserver", "$new_printserver")) }
+            $printer = Get-WmiObject Win32_Printer | ? { $_.name -like "\\" + $strNewPrintserver +"\" + $_.Sharename }
+            $printer.SetDefaultPrinter()
+        }
+    }
 
-
-# Standarddrucker wieder definieren
-$default_printer = $default_printer.replace("$old_printserver", "$new_printserver")
-
-$printer = Get-WmiObject Win32_Printer | ? { $_.name -like "*$default_printer*"}
-$printer.SetDefaultPrinter()
+	# Ausgabe
+    write-host "Fertig" | Out-File "C:\Temp\$env:USERNAME-printers.txt"
+}
