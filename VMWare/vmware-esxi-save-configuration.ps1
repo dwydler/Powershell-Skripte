@@ -5,7 +5,7 @@ cd C:\Jobs\_vmware
 
 write-host @"
 ===========================================================================
-Festplattenkapazität von VDI VMs vergrößern
+Sichern der Konfiguration von ESXi-Servern
 ===========================================================================
 Autor:     Daniel Wydler
 Script:    Sicherung der Konfiguration aller ESXi Server über das jeweilige
