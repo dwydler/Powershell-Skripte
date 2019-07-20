@@ -20,7 +20,7 @@ Umgebung:  VMWare vCenter Server 6.7, VMWare vSphere ESXi 6.5,
 Powershell Variable und Konstante
 ===========================================================================
 #>
-[array] $aVMWareVcenterHost = @("vcenter01.abc.de", "vcenter02.abc.de")
+[array] $aVMWareVcenterHost = @("")
 [string] $strVMWareVcenterProtocol = "https"
 
 [string] $strVmWareBackupPath = "\\fqdn\sicherungen\vmware-esxi"
