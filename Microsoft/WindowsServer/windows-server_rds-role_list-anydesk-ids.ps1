@@ -20,7 +20,7 @@ None
 None
  
 .NOTES
-File:           list-anydesk-id-rds-host.ps1
+File:           windows-server_rds-role_list-anydesk-ids.ps1
 Version:        1.1
 Author:         Daniel Wydler
 Creation Date:  16.03.2019, 12:39 Uhr
@@ -40,7 +40,7 @@ None
 https://github.com/dwydler/Powershell-Skripte/blob/master/Microsoft/WindowsServer/list-anydesk-id-rds-host.ps1
 
 .EXAMPLE
-.\list-anydesk-id-rds-host.ps1
+.\windows-server_rds-role_list-anydesk-ids.ps1
 #>
 
 #---------------------------------------------------------[Initialisations]--------------------------------------------------------
@@ -76,7 +76,7 @@ function WorkingDir {
         [switch] $Debugging
     )
 
-    # Splittet aus dem vollständigen Dateipfad den Verzeichnispfad heraus
+    # Splittet aus dem vollstÃ¤ndigen Dateipfad den Verzeichnispfad heraus
     # Beispiel: D:\Daniel\Temp\Unbenannt2.ps1 -> D:\Daniel\Temp
     [string] $strWorkingdir = Split-Path $MyInvocation.PSCommandPath -Parent
 
@@ -126,7 +126,7 @@ function Write-Log {
         $strLogFileHeader += "{0,-21} {1,0}" -f "# Skript:", "$($MyInvocation.ScriptName)`n"
         $strLogFileHeader += "{0,-21} {1,0}" -f "# Startzeit:", "$(Get-Date -Format "dd.MM.yyyy HH:mm:ss")`n"
         $strLogFileHeader += "{0,-21} {1,0}" -f "# Startzeit:", "$(Get-Date -Format "dd.MM.yyyy HH:mm:ss")`n"
-        $strLogFileHeader += "{0,-21} {1,0}" -f "# Ausführendes Konto:", "$([Security.Principal.WindowsIdentity]::GetCurrent().Name)`n"
+        $strLogFileHeader += "{0,-21} {1,0}" -f "# AusfÃ¼hrendes Konto:", "$([Security.Principal.WindowsIdentity]::GetCurrent().Name)`n"
         $strLogFileHeader += "{0,-21} {1,0}" -f "# Computername:", "$env:COMPUTERNAME`n"
         $strLogFileHeader += "$("#" * 75)`n"
 
