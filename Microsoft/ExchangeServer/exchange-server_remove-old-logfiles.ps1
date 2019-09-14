@@ -21,7 +21,7 @@ None
 None
  
 .NOTES
-File:           remove-old-exchange-logfiles.ps1
+File:           exchange-server_remove-old-logfiles.ps1
 Version:        1.1
 Author:         Daniel Wydler
 Creation Date:  16.03.2019, 12:39 Uhr
@@ -37,10 +37,10 @@ Date                   Comment
 None
 
 .LINK
-https://github.com/dwydler/Powershell-Skripte/blob/master/Microsoft/ExchangeServer/remove-old-exchange-logfiles.ps1
+https://github.com/dwydler/Powershell-Skripte/blob/master/Microsoft/ExchangeServer/exchange-server_remove-old-logfiles.ps1
 
 .EXAMPLE
-.\remove-old-exchange-logfiles.ps1
+.\exchange-server_remove-old-logfiles.ps1
 #>
 
 #---------------------------------------------------------[Initialisations]--------------------------------------------------------
