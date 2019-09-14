@@ -19,7 +19,7 @@ None
 None
  
 .NOTES
-File:           list-ad-delegations.ps1
+File:           active-directory_list-delegations.ps1
 Version:        1.0
 Author:         Daniel Wydler
 Creation Date:  10.03.2019, 12:45 Uhr
@@ -35,10 +35,10 @@ Date                   Comment
 Active Directory PowerShell Module
 
 .LINK
-https://github.com/dwydler/Powershell-Skripte/blob/master/Microsoft/ActiveDirectory/list-ad-delegations.ps1
+https://github.com/dwydler/Powershell-Skripte/blob/master/Microsoft/ActiveDirectory/active-directory_list-group-delegations.ps1
 
 .EXAMPLE
-.\list-ad-delegations.ps1
+.\active-directory_list-delegations.ps1
 #>
 
 #---------------------------------------------------------[Initialisations]--------------------------------------------------------
