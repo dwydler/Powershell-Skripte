@@ -1,7 +1,9 @@
 #----------------------------------------------------------[Declarations]----------------------------------------------------------
+# function Write-Log
 [string] $strLogfilePath = "C:\Temp"
 [string] $strLogfileDate = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
-[string] $strLogfileName = ("Log_" + $strLogfileDate + ".log")
+[string] $strLogfileNamePrefix = "Log_"
+[string] $strLogfileName = $($strLogfileNamePrefix + $strLogfileDate + ".log")
 [string] $strLogfile = $strLogfilePath + "\" + $strLogfileName
 
 #-----------------------------------------------------------[Functions]------------------------------------------------------------
