@@ -59,7 +59,7 @@ Clear-Host
 
 ### Anydesk
 [string] $strAnyDeskIdsFilePath = "C:\Temp"
-[string] $strAnyDeskIdsFilename = $("$strAnyDeskIdsFilePath\Übersicht AnyDeskIDs.txt")
+[string] $strAnyDeskIdsFilename = $("$strAnyDeskIdsFilePath\Uebersicht AnyDeskIDs.txt")
 [string] $strAnyDeskConf = "AppData\Roaming\AnyDesk\system.conf"
 [string] $strAnyDeskIdFileInput = ""
 [string] $strAnyDeskId = ""
@@ -178,6 +178,10 @@ function Write-Log {
 Write-Log -LogText "Wechsele das Arbeitsverzeichnis..." -LogStatus Info
 WorkingDir
 
+$strAnyDeskIdFileInput = "{0,-25} {1,9}" -f "Benutzername"," AnyDeskID`n"
+$strAnyDeskIdFileInput += "-------------------------------------`n"
+
+
 Write-Log -LogText "Auslesen der Benutzerprofile..." -LogStatus Info
 Get-ChildItem "$env:systemdrive\Users" | Select Name, FullName | foreach {
 
@@ -188,7 +192,7 @@ Get-ChildItem "$env:systemdrive\Users" | Select Name, FullName | foreach {
 
         Write-Log -LogText "`tAnyDesk ID ausgelesen." -LogStatus Info
         $strAnyDeskId = (Get-Content $($_.FullName + "\" + $strAnyDeskConf) | Select-String -Pattern "ad.anynet.id").ToString().Trim() -replace "ad.anynet.id="
-        $strAnyDeskIdFileInput += "{0,-25}  {1,9}" -f $_.Name, $strAnyDeskId
+        $strAnyDeskIdFileInput += "{0,-25}  {1,9}" -f $_.Name,$strAnyDeskId + "`n"
     }
 
 }
