@@ -183,21 +183,35 @@ function Write-Log {
 
 }
 
+function LoadModule {
+    Param (
+        [Parameter(
+            mandatory=$True,
+            Position=0
+        )]
+        [string] $ModuleName
+    )
+
+    if (Get-Module -ListAvailable -Name $ModuleName ) {
+    Write-Log -LogText "Das Modul '$ModuleName' existiert." -LogStatus Info
+
+        if (Get-module $ModuleName) {
+            Write-Log -LogText "Das Modul '$ModuleName' ist bereits geladen." -LogStatus Info -Absatz
+        }
+        else {
+            Write-Log -LogText "Das Modul '$ModuleName' wurde eingebunden." -LogStatus Success -Absatz
+            Import-Module $ModuleName
+        }
+    } 
+    else {
+        Write-Log -LogText "Das Modul '$ModuleName' existiert nicht!" -LogStatus Error
+        exit
+    }
+}
+
 #------------------------------------------------------------[Modules]-------------------------------------------------------------
 
-if (Get-Module -ListAvailable -Name "ActiveDirectory" ) {
-    Write-Log -LogText "Das Modul ActiveDirectory existiert." -LogStatus Info
-
-    If( -not (Get-module "ActiveDirectory") ) {
-        
-        Write-Log -LogText "Das Modul Active Directory wurde eingebunden." -LogStatus Success
-        Import-Module "ActiveDirectory"
-    }
-} 
-else {
-    Write-Log -LogText "Das Modul ActiveDirectory existiert nicht!" -LogStatus Error
-    exit
-}
+LoadModule -ModuleName "ActiveDirectory"
 
 #-----------------------------------------------------------[Execution]------------------------------------------------------------
 
