@@ -62,6 +62,7 @@ Clear-Host
 
 # Alter der Dateien, die nicht gelöscht werden sollen ( in Tage)
 [int] $intDays = 14
+[ValueType] $timeSpan = New-TimeSpan -Days $intDays
 
 # Verzeichnisse in denen Microsoft Exchange Servern diverse Protokolldateien abgelegt
 [string] $strIISLogPath = "C:\inetpub\logs\LogFiles\"
@@ -186,11 +187,10 @@ function Exchange-ClearLogfiles {
     )
 
     if (Test-Path $TargetFolder) {
-        $Now = Get-Date
-        $LastWrite = $Now.AddDays(-$intDays)
 
         Write-Log -LogText "Dateien mit entsprechenden Dateityp werden gesucht..." -LogStatus Info
-        $Files = Get-ChildItem $TargetFolder -Recurse | Where-Object {$_.Name -like "*.log" -or $_.Name -like "*.blg" -or $_.Name -like "*.etl"}  | where {$_.lastWriteTime -le "$lastwrite"} | Select-Object FullName  
+        $Files = Get-ChildItem $TargetFolder -Recurse | Select Extension, FullName, LastWriteTime | Where-Object `
+            { ($_.Extension -eq ".log") -or ($_.Extension -eq ".blg") -or ($_.Extension -eq ".etl") -and ($_.LastWriteTime -lt ((Get-Date) - $timeSpan) ) } 
         
         foreach ($File in $Files) {
             Write-Log -LogText "Die Datei $($File.FullName) wird gelöscht..." -LogStatus Info
