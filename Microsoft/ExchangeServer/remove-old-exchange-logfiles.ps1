@@ -196,7 +196,7 @@ function Exchange-ClearLogfiles {
             Write-Log -LogText "Die Datei $($File.FullName) wird gelöscht..." -LogStatus Info
 
             try {
-                #Remove-Item $File.FullName | Out-Null
+                Remove-Item $File.FullName | Out-Null
                 Write-Log -LogText "Die Datei $($File.FullName) wurde gelöscht." -LogStatus Success
             }
             catch {
