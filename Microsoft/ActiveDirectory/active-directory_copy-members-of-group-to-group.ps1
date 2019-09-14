@@ -24,7 +24,7 @@ None
 None
  
 .NOTES
-File:           copy-members-of-group-to-group.ps1
+File:           active-directory_copy-members-of-group-to-group.ps1
 Version:        1.1
 Author:         Daniel Wydler
 Creation Date:  10.03.2019, 12:45 Uhr
@@ -40,10 +40,10 @@ Date                   Comment
 None
 
 .LINK
-https://github.com/dwydler/Powershell-Skripte/blob/master/Microsoft/ActiveDirectory/copy-members-of-group-to-group.ps1
+https://github.com/dwydler/Powershell-Skripte/blob/master/Microsoft/ActiveDirectory/active-directory_copy-members-of-group-to-group.ps1
 
 .EXAMPLE
-.\copy-members-of-group-to-group.ps1
+.\active-directory_copy-members-of-group-to-group.ps1
 #>
 
 #---------------------------------------------------------[Initialisations]--------------------------------------------------------
