@@ -1,26 +1,181 @@
 <#
-===========================================================================
-Fujitsu Garantie / Service Status ueberpruefen
-===========================================================================
-Autor:     Daniel Wydler
-Umgebung:  Windows 10 (1703), Powershell 5.1.15063.502
+.SYNOPSIS
+Dieses Skript ruft die Garantieinformationen eines Geräts vom Hersteller Fujitsu ab
+
+Daniel Wydler
+
+THIS CODE IS MADE AVAILABLE AS IS, WITHOUT WARRANTY OF ANY KIND. THE ENTIRE
+RISK OF THE USE OR THE RESULTS FROM THE USE OF THIS CODE REMAINS WITH THE USER. 
+
+.DESCRIPTION
+
+ 
+.PARAMETER SerialNumber
+Angabe der Seriennummer des Geräts, welches abgefragt werden soll
+
+ 
+.INPUTS
+Die Seriennummer des Geräts
+ 
+.OUTPUTS
+Ausgabe der Garantieinformationen des Geräts
+ 
+.NOTES
+File:           fujtisu-support_check-warranty-status
+Version:        0.4
+Author:         Daniel Wydler
+Creation Date:  10.03.2019, 10:32 Uhr
+Purpose/Change:
+ 
+Date                   Comment
+-----------------------------------------------
+10.03.2019, 10:32 Uhr  Initial community release
+10.03.2019, 10:34 Uhr  Fujtisu change the query function
+10.03.2019, 10:35 Uhr  remove serial from demo pc
+15.09.2019, 15:35 Uhr  Fujtisu change the query function
+
+
+.COMPONENT
+None
+
+.LINK
+https://github.com/dwydler/Powershell-Skripte/blob/master/Fujitsu/fujtisu-support_check-warranty-status.ps1
+
+.EXAMPLE
+.\fujtisu-support_check-warranty-status -SerialNumber "YLLC001597"
 #>
+
+#---------------------------------------------------------[Initialisations]--------------------------------------------------------
 
 param(
     [Parameter(
         Position=0,
-        Mandatory=$false
-    )] [string] $SerialNumber = ""
+        Mandatory=$true
+    )] 
+    [ValidateNotNullOrEmpty()]
+    [string] $SerialNumber = ""
 )
 
-clear-host
+Clear-Host
+
+#----------------------------------------------------------[Declarations]----------------------------------------------------------
+
+### function Write-Log
+[string] $strLogfilePath = "C:\Temp"
+[string] $strLogfileDate = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
+[string] $strLogfileNamePrefix = "Log_"
+[string] $strLogfileName = $($strLogfileNamePrefix + $strLogfileDate + ".log")
+[string] $strLogfile = $strLogfilePath + "\" + $strLogfileName
 
 
-<#
-===========================================================================
-Funktionen
-===========================================================================
-#>
+### 
+
+#-----------------------------------------------------------[Functions]------------------------------------------------------------
+
+function WorkingDir {
+    param (
+         [parameter(
+            Mandatory=$false,
+            Position=0
+          )]
+        [switch] $Debugging
+    )
+
+    # Splittet aus dem vollstÃ¤ndigen Dateipfad den Verzeichnispfad heraus
+    # Beispiel: D:\Daniel\Temp\Unbenannt2.ps1 -> D:\Daniel\Temp
+    [string] $strWorkingdir = Split-Path $MyInvocation.PSCommandPath -Parent
+
+    # Wenn Variable wahr ist, gebe Text aus.
+    if ($Debugging) {
+        Write-Host "[DEBUG] PS $strWorkingdir`>" -ForegroundColor Gray
+    }
+
+    # In das Verzeichnis wechseln
+    cd $strWorkingdir
+}
+
+function Write-Log {
+    [CmdletBinding()]
+    param (
+        [Parameter(
+            Mandatory=$true,
+            Position=0)]
+        [ValidateNotNullOrEmpty()]
+        [string] $LogText = "",
+
+        [Parameter(Mandatory=$false)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateSet('Info','Success','Warning','Error')]
+        [string] $LogStatus= "Info",
+
+        [Parameter(Mandatory=$false)]
+        [switch] $Absatz,
+
+        [Parameter(Mandatory=$false)]
+        [switch] $EventLog
+    )
+
+	[string] $strLogdate = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    [string] $strTextColor = "White"
+    [string] $strLogFileAbsatz = ""
+    [string] $strLogFileHeader = ""
+
+    if ( -not (Test-Path $strLogfilePath) ) {
+        Write-Host "Der angegebene Pfad $strLogfilePath existiert nicht!" -ForegroundColor Red
+        exit
+    }
+
+    # Add a header to logfile, if the logfile not exist
+    If ( -not (Test-Path $strLogfile) ) {
+        $strLogFileHeader = "$("#" * 75)`n"
+        $strLogFileHeader += "{0,-21} {1,0}" -f "# Skript:", "$($MyInvocation.ScriptName)`n"
+        $strLogFileHeader += "{0,-21} {1,0}" -f "# Startzeit:", "$(Get-Date -Format "dd.MM.yyyy HH:mm:ss")`n"
+        $strLogFileHeader += "{0,-21} {1,0}" -f "# Startzeit:", "$(Get-Date -Format "dd.MM.yyyy HH:mm:ss")`n"
+        $strLogFileHeader += "{0,-21} {1,0}" -f "# Ausführendes Konto:", "$([Security.Principal.WindowsIdentity]::GetCurrent().Name)`n"
+        $strLogFileHeader += "{0,-21} {1,0}" -f "# Computername:", "$env:COMPUTERNAME`n"
+        $strLogFileHeader += "$("#" * 75)`n"
+
+        Write-Host $strLogFileHeader
+        Add-Content -Path $strLogfile -Value $strLogFileHeader -Encoding UTF8
+    }
+   
+
+    switch($LogStatus) {
+        Info {
+            $strTextColor = "White"
+        }
+        Success {
+            $strTextColor = "Green"
+        }
+        Warning {
+            $strTextColor = "Yellow"
+        }
+        Error {
+            $strTextColor = "Red"
+        }
+    }
+
+    # Add an Absatz if the parameter is True
+    if($Absatz) {
+        [string] $strLogFileAbsatz = "`r`n"
+    }
+
+    #Format the text output
+    $LogText = "{0,-20} - {1,-7} - {2,0}" -f "$strLogdate", "$LogStatus", "$LogText $strLogFileAbsatz"
+
+    # Write output to powershell console
+    Write-Host $LogText -ForegroundColor $strTextColor
+
+    # Write output to logfile
+    Add-Content -Path $strLogfile -Value $LogText -Encoding UTF8
+
+    # Add Logfile to local Eventlog of the operating system 
+    if($EventLog) {
+        Write-EventLog -LogName 'Windows PowerShell' -Source "Powershell" -EventId 0 -Category 0 -EntryType $LogStatus -Message $LogText
+    }
+
+}
+
 Function ValidSerialNumber ([string] $strLocSerialNumber) {
     
     if($strLocSerialNumber -match "^[a-zA-Z]{2}[\da-zA-Z][a-zA-Z]\d{6}$") {
@@ -32,111 +187,49 @@ Function ValidSerialNumber ([string] $strLocSerialNumber) {
     }
 }
 
-Function GetWarrantyInfo ([string] $strLocSerialNumber) {
-    
-    # Garantiedaten auf der Fujitsu-Webseite abfragen
-    try {
-        $wroSearchHtml= Invoke-WebRequest "http://support.ts.fujitsu.com/include/Suchfunktion.asp?lng=DE&GotoURL=IndexWarranty&Search=$strLocSerialNumber" -SessionVariable session
-        $wroLocHtml = Invoke-WebRequest "http://support.ts.fujitsu.com/Warranty/WarrantyStatus.asp?lng=DE&IDNR=$strLocSerialNumber&HardwareGUID=428EF436-8E40-49C1-9C07-F10F56903BF3&Version=3.51" -WebSession $session
-    }
-    catch {
-        Write-Host $($_.Exception.Message) -ForegroundColor Red
-        break;
-    }
+#------------------------------------------------------------[Modules]-------------------------------------------------------------
 
-
-    # Filtern der notwendigen Informationen aus der HTML Quellcode
-    return ($wroLocHtml.ParsedHtml.getElementsByTagName("td") | Where { ($_.className -eq ‘contenttext’) }).outertext    
-}
-
-Function SetWarrantyEnd ([array] $aLocProductInfo) {
-
-    [array] $htMatches = @()
-
-    # Verlängerung von 3 auf 4 Jahre Vor-Ort Service, 9x5, nächster Arbeitstag Antrittszeit, gilt im Land des Erwerb
-    #if($aProductInfo[2] -match "[A-Za-zä\s]{0,18}\d\s[a-z]{0,3}\s\d\s[A-Za-z\s\-]{0,21}") {
-    if($aLocProductInfo[2] -match "[A-Za-zä\s]+\d[A-Za-zä\s]+\d[A-Za-zä\s\-]+") {
-        $htMatches = $aLocProductInfo[2] -split "(\d+)"
-        return (Get-Date $aLocProductInfo[7]).AddYears($htMatches[3])
-    }
-    # 5 Jahre Vor-Ort Service, 9x5, nächster Arbeitstag Antrittszeit, gilt im Land des Erwerbs
-    #elseif ($aProductInfo[2] -match "(\d\s[A-Za-z\s\-]{0,21}\,\s\d[x]\d)") {
-    elseif ($aLocProductInfo[2] -match "\d[a-zA-Z\s\-]+\,\s\dx\d") {
-        $htMatches = $aLocProductInfo[2] -split "([\sA-Za-z\-\,ä]+)(\d[x]\d)"
-        return (Get-Date $aLocProductInfo[7]).AddYears($htMatches[0])
-    }
-    else {
-        #Write-Host "Unbekannter Garantiestatus!" -ForegroundColor Red
-        return (Get-Date $aLocProductInfo[7])
-    }
-
-}
-
-Function OutputInformations ([array] $aLocProductInfo, [datetime] $dtLocServiceEnd) {
-
-    Write-Host "Produktname:`t`tFujitsu $($aLocProductInfo[0].Trim())"
-    Write-Host "Bestellnummer:`t`t$($aLocProductInfo[3].Trim())"
-    Write-Host "Service Code:`t`t$($aLocProductInfo[6].Trim())"
-    Write-Host "Service Start:`t`t$($aLocProductInfo[7].Trim())"
-    Write-Host "Service Ende:`t`t" -NoNewline
-        if ($aLocProductInfo[1] -eq "Der Service für das Produkt ist abgelaufen") { Write-Host "" }
-        elseif ($dtLocServiceEnd -gt (get-date)) { write-host "$($dtLocServiceEnd.ToString("dd.MM.yyyy"))" -ForegroundColor Green }
-        elseif ($dtLocServiceEnd -lt (get-date)) { write-host "$($dtLocServiceEnd.ToString("dd.MM.yyyy"))" -ForegroundColor Red }
-        
-
-    Write-Host "Service Status:`t`t$($aLocProductInfo[1].Trim())"
-    Write-Host "Garantie Gruppe: `t$($aLocProductInfo[4].Trim())"
-    Write-Host "Garantie Art:`t`t" -NoNewline
-        if ($aLocProductInfo[2] -ne $null) { $aLocProductInfo[2].Trim() }
-        else { Write-host "---" -ForegroundColor Red }
-}
-
-
-
-<#
-===========================================================================
-Hauptprogramm
-===========================================================================
-#>
+#-----------------------------------------------------------[Execution]------------------------------------------------------------
 
 Write-Host @"
 ------------------------------------------------------------------------------------------------------------------------
 
                                         Fujitsu Garantie / Service Status ueberpruefen
-                                                        Version: 0.3
+                                                        Version: 0.4
 
 ------------------------------------------------------------------------------------------------------------------------
 "@
 
-# Abfrage, ob Seriennummer übergeben worden ist. Falls nicht, kann diese manuell eingegeben werden.
-if( -not($SerialNumber) ) {
-    $SerialNumber = Read-Host -Prompt "Seriennummer des Geraets eingeben (z.B. YLLC001597 oder YM5G017873)"
-    [bool] $cli = $false
+Write-Log -LogText "Überprüfen des Muster/Länger der Seriennummer." -LogStatus Info
+if (ValidSerialNumber $SerialNumber ) {
+    Write-Log -LogText "Gültige Seriennummer '$SerialNumber' erkannt." -LogStatus Success -Absatz
 }
 else {
-    Write-Host "Seriennummer als Parameter übergeben."
-    [bool] $cli = $true
+    Write-Log -LogText "Die Seriennummer '$SerialNumber' ist ungültig!" -LogStatus Error
+    exit
 }
 
 
-# Überprüfen des Muster/Länger der Seriennummer
-if( -not(ValidSerialNumber "$SerialNumber") ) {
-    write-host "Keine gültige Seriennummer eingegeben!" -ForegroundColor Red
+Write-Log -LogText "Abfrage der Daten des Geräts bei Fujitsu." -LogStatus Info -Absatz
+$wroSearchHtml= Invoke-WebRequest "https://support.ts.fujitsu.com/Adler/Default.aspx?Lng=de&GotoDiv=Warranty/WarrantyStatus&DivID=indexwarranty&GotoUrl=IndexWarranty&Ident=$SerialNumber"
+
+#$wroSearchHtml.InputFields | Where-Object { ($_.name -like "*") } | Select-Object Name, Value
+[array] $arrFujitsuDeviceWarrentyInfos = $wroSearchHtml.InputFields | Where-Object { ($_.name -eq "Ident") -or ($_.name -eq "Produkt") -or ($_.name -eq "Firstuse") -or ($_.name -eq "WarrantyEndDate")  -or ($_.name -eq "WCode") `
+      -or ($_.name -eq "WCodeDesc") -or ($_.name -eq "PartNumber") -or ($_.name -eq "WGR") -or ($_.name -eq "SOG") } | Select-Object Name, Value
+ 
+Write-Log -LogText "Produktname:`t`t`tFujitsu $($arrFujitsuDeviceWarrentyInfos[1].value)" -LogStatus Info 
+Write-Log -LogText "Bestellnummer:`t`t`t$($arrFujitsuDeviceWarrentyInfos[8].value)" -LogStatus Info
+Write-Log -LogText "Garantie Gruppe:`t`t$($arrFujitsuDeviceWarrentyInfos[6].value)" -LogStatus Info
+Write-Log -LogText "Service Offer Gruppe:`t$($arrFujitsuDeviceWarrentyInfos[7].value)" -LogStatus Info
+Write-Log -LogText "Service Code:`t`t`t$($arrFujitsuDeviceWarrentyInfos[2].value)" -LogStatus Info
+Write-Log -LogText "Service Start:`t`t`t$(Get-Date $arrFujitsuDeviceWarrentyInfos[3].value -Format "dd.MM.yyyy")" -LogStatus Info
+
+if( (Get-Date $arrFujitsuDeviceWarrentyInfos[4].value) -gt (Get-Date)) {
+    Write-Log -LogText "Service Ende:`t`t`t$(Get-Date $arrFujitsuDeviceWarrentyInfos[4].value -Format "dd.MM.yyyy")" -LogStatus Success
+    Write-Log -LogText "Service Status:`t`tDas Produkt ist unter Service." -LogStatus Success
 }
 else {
-    Write-Host "`n"
-
-    # Garantiedaten auf der Fujitsu-Webseite abfragen
-    [array] $aProductInfo = GetWarrantyInfo ($SerialNumber)
-
-    # 
-    [datetime] $dtWarrantyEnd = SetWarrantyEnd ($aProductInfo)
-
-    # Ausgabe der Daten
-    OutputInformations $aProductInfo $dtWarrantyEnd
+    Write-Log -LogText "Service Ende:`t`t`t$(Get-Date $arrFujitsuDeviceWarrentyInfos[4].value -Format "dd.MM.yyyy")" -LogStatus Error
+    Write-Log -LogText "Service Status:`t`tDas Produkt hat keinen Service mehr!" -LogStatus Error
 }
-
-# Ende
-if($cli -eq $false) {
-    pause
-}
+Write-Log -LogText "Garantie Typ:`t`t`t$($arrFujitsuDeviceWarrentyInfos[5].value)" -LogStatus Info
