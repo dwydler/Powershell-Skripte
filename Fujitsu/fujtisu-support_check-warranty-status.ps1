@@ -42,7 +42,7 @@ None
 https://github.com/dwydler/Powershell-Skripte/blob/master/Fujitsu/fujtisu-support_check-warranty-status.ps1
 
 .EXAMPLE
-.\fujtisu-support_check-warranty-status -SerialNumber "YLLC001597"
+.\fujtisu-support_check-warranty-status -SerialNumber "YM5G017837"
 #>
 
 #---------------------------------------------------------[Initialisations]--------------------------------------------------------
@@ -53,7 +53,14 @@ param(
         Mandatory=$true
     )] 
     [ValidateNotNullOrEmpty()]
-    [string] $SerialNumber = ""
+    [string] $SerialNumber = "",
+
+    [Parameter(
+        Position=0,
+        Mandatory=$false
+    )] 
+    [ValidateNotNullOrEmpty()]
+    [switch] $Interactive
 )
 
 Clear-Host
@@ -233,3 +240,7 @@ else {
     Write-Log -LogText "Service Status:`t`tDas Produkt hat keinen Service mehr!" -LogStatus Error
 }
 Write-Log -LogText "Garantie Typ:`t`t`t$($arrFujitsuDeviceWarrentyInfos[5].value)" -LogStatus Info
+
+if ($Interactive) {
+    pause
+}
