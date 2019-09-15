@@ -58,7 +58,7 @@ Clear-Host
 
 #----------------------------------------------------------[Declarations]----------------------------------------------------------
 
-[string] $strResult = ""
+[string] $strXmlOutput = ""
 
 #-----------------------------------------------------------[Functions]------------------------------------------------------------
 
@@ -93,18 +93,18 @@ if (-not ($WindowsServerBackupInstalled) ) {
 else {
     $WindowsServerBackupStatus = Invoke-Command -Computername $PrtgDevice -ScriptBlock { Get-WBSummary }
 
-    $xmlOutput = "<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>`n"
-    $xmlOutput += "<prtg>`n"
-    $xmlOutput += "`t<Text>`n"
-    $xmlOutput += "`tLast successfull Backup: "
-    $xmlOutput += "$(get-date $WindowsServerBackupStatus.LastSuccessfulBackupTime -Format "dd.MM.yyyy HH:mm:ss")`n"
-    $xmlOutput += "`t</Text>`n"
-    $xmlOutput += "`t<result>`n"
-    $xmlOutput += "`t`t<Channel>Fehlercode</Channel>`n"
-    $xmlOutput += "`t`t<value>$($WindowsServerBackupStatus.LastBackupResultHR)</value>`n"
-    $xmlOutput += "`t</result>`n"
-    $xmlOutput += '</prtg>'
+    $strXmlOutput = "<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>`n"
+    $strXmlOutput += "<prtg>`n"
+    $strXmlOutput += "`t<Text>`n"
+    $strXmlOutput += "`tLast successfull Backup: "
+    $strXmlOutput += "$(get-date $WindowsServerBackupStatus.LastSuccessfulBackupTime -Format "dd.MM.yyyy HH:mm:ss")`n"
+    $strXmlOutput += "`t</Text>`n"
+    $strXmlOutput += "`t<result>`n"
+    $strXmlOutput += "`t`t<Channel>Fehlercode</Channel>`n"
+    $strXmlOutput += "`t`t<value>$($WindowsServerBackupStatus.LastBackupResultHR)</value>`n"
+    $strXmlOutput += "`t</result>`n"
+    $strXmlOutput += '</prtg>'
 
     # Return Xml
-    $xmlOutput
+    $strXmlOutput
 }
