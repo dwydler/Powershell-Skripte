@@ -53,6 +53,7 @@ NoSpamProxy PowerShell Module
 
 .LINK
 http://www.granikos.eu/en/scripts
+https://github.com/dwydler/Powershell-Skripte/tree/master/Paessler/PRTG
 
 .EXAMPLE
 .\paessler-prtg_monitor-netatwork-nospamproxy.ps1 "Computername" "Intervall des PRTG Sensors"
