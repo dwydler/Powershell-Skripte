@@ -56,7 +56,7 @@ param(
     [string] $SerialNumber = "",
 
     [Parameter(
-        Position=0,
+        Position=1,
         Mandatory=$false
     )] 
     [ValidateNotNullOrEmpty()]
