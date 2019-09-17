@@ -14,7 +14,6 @@ This script returns Xml for a custom PRTG sensor providing the following channel
 - Outbound Success           | Number of outbound successfully delivered messages over the last X minutes
 - Inbound PermanentlyBlocked | Number of inbound blocked messages over the last X minutes
 - Outbound DeliveryPending   | Number of outbound messages with pending delivery over the last X minutes
- 
 
 .PARAMETER PrtgDevice
 Name des Servers, auf dem die NoSpamProxy Intranet Rolle installiert ist.
@@ -24,7 +23,6 @@ Dieser Parameter muss indentisch sein, mit dem Abfrage Interverall des PRTG Sens
 
 .PARAMETER NspGatewayRoleName
 Mit diesem Parameter kann explizit der Name der NoSpamProxy Gateway Rolle angegeben werden, die ausgewertet werden soll
-
 
 .INPUTS
 None
@@ -47,6 +45,9 @@ Date                   Comment
 17.09.2019, 17:01 Uhr  Rewrited codebase for query gateway role
 
 
+The following parameters of the message tracking information are available
+-Status: Success | DispatcherError | TemporarilyBlocked | PermanentlyBlocked | PartialSuccess | DeliveryPending | Suppressed | DuplicateDrop | All
+-Directions: FromLocal | FromExternal | All
 
 .COMPONENT
 NoSpamProxy PowerShell Module
