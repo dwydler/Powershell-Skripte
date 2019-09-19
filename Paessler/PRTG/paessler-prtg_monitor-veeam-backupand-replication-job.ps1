@@ -1,137 +1,180 @@
 <#
-===========================================================================
-Paessler PRTG Sensor fuer Veeam Backup Jobs
-===========================================================================
-Autor:     Daniel Wydler
-Script:    veeam-backupjob-status.ps1
-Parameter: Veeam Backup Job Name, Servername auf dem Veeam läuft
-Version:   0.2
-Datum:     11.02.2017
-Umgebung:  Windows Server 2012R2 + Veeeam Backup & Replication 9.5U1
+.SYNOPSIS
+PRTG Sensor script to monitor a Veeam Backup & Replication environment
 
-Hinweis: Grundlage für das Skript ist folgender Blog:
+THIS CODE IS MADE AVAILABLE AS IS, WITHOUT WARRANTY OF ANY KIND. THE ENTIRE
+RISK OF THE USE OR THE RESULTS FROM THE USE OF THIS CODE REMAINS WITH THE USER. 
+
+.DESCRIPTION
+
+.PARAMETER PrtgDevice
+Name des Servers, auf dem die NoSpamProxy Intranet Rolle installiert ist.
+
+.PARAMETER VeeamBRJobName
+Name des Jobs, der innerhalb von Veeam Backup & Replication abgefragt werden soll.
+
+ 
+.INPUTS
+None
+ 
+.OUTPUTS
+Output exit code and a description
+ 
+.NOTES
+File:           paessler-prtg_monitor-veeam-backupand-replication-job.ps1
+Version:        1.1
+Author:         Daniel Wydler
+Creation Date:  10.03.2019, 10:54 Uhr
+Purpose/Change:
+ 
+Date                   Comment
+-----------------------------------------------
+10.03.2019, 10:54 Uhr  Initial community release
+18.09.2019, 21:39 Uhr  Code base revised
+19.09.2019, 00:11 Uhr  Added informations to the header
+
+
+.COMPONENT
+Veeam Backup & Replication Powershell-Module
+
+.LINK
 http://www.vmbaggum.nl/2015/03/monitor-veeam-backup-jobs-with-prtg/
+https://github.com/dwydler/Powershell-Skripte/blob/master/Paessler/PRTG/paessler-prtg_monitor-veeam-backupand-replication-job.ps1
+
+
+.EXAMPLE
+.\paessler-prtg_monitor-veeam-backupand-replication-job.ps1 -PrtgDevice "localhost" -VeeamBRJobName "Job1"
+.\paessler-prtg_monitor-veeam-backupand-replication-job.ps1 "localhost" "Job1"
 #>
 
-<#
-===========================================================================
-Powershell Variable und Konstante
-===========================================================================
-#>
-[bool] $strVeeamBackupEntpointJob = $false
+#---------------------------------------------------------[Initialisations]--------------------------------------------------------
+ 
+Param (
+   [Parameter(
+        ValueFromPipelineByPropertyName,
+        Position=0,
+        Mandatory=$true
+    )]
+    [ValidateNotNullOrEmpty()]
+   [string] $PrtgDevice,
 
-[string] $strVeeamBackupServer = ""
-[string] $strVeeamBackupJobId = ""
-[string] $strVeeamBackupJobName = ""
-[string] $strVeeamBackupJobResult = ""
-[string] $strVeeamBackupJobSession = ""
+   [Parameter(
+        ValueFromPipelineByPropertyName,
+        Position=1,
+        Mandatory=$true
+    )]
+    [ValidateNotNullOrEmpty()]
+   [string] $VeeamBRJobName
+)
 
-<#
-===========================================================================
-Argumente einlesen
-===========================================================================
-#>
-If ($Args.Count -le 0) {
-    Write-host "Keine Argumente übergeben!"
-    exit 2;
-    }
-ElseIf($Args.Count -gt 2) {
-    Write-host "Zu viele Argumente übergeben!"
-    exit 2;
-    }
-ElseIf ($Args.Count -eq 1) {
-    Write-host "Die Variable %device ist nicht angegeben!"
-    exit 2;
-    }
-Else {
-    # Argument Variable zuweisen
-    $strVeeamBackupJobName = $Args[0]
-    $strVeeamBackupServer = $Args[1]
-}
+Clear-Host
 
-<#
-===========================================================================
-Hauptprogramm
-===========================================================================
-#>
+#----------------------------------------------------------[Declarations]----------------------------------------------------------
 
-#Powershell Remote Session starten
-try {
-    $PSSession = New-PSSession -ComputerName $strVeeamBackupServer -ErrorAction Stop } catch {
-    write-host "Keine Verbindung zu $strVeeamBackupServer möglich!"
-    exit 2;
-}
+[string] $FunctionForInvokeCommand = ""
 
-#Invoke remote commands
-$strVeeamBackupJobResult = Invoke-Command -Session $PSSession -ScriptBlock { 
+#-----------------------------------------------------------[Functions]------------------------------------------------------------
 
-	#Passing Variable
-	param($strVeeamBackupJobName)
-
-	#Nachladen des Veeam Powershell SnapIn
-    try {
-	    Add-PSSnapin -Name VeeamPSSnapIn -WarningAction SilentlyContinue -ErrorAction Stop
-    } catch {
-        #Fehlercode & -meldung zurückgeben.
-        return "2:Veeam Powershell Snapin konnte nicht geladen werden."
-    }
-
-	#Get the Backup History from the Backup Job
-    try {
-        $strVeeamBackupJobId = Get-VBREPJob -Name $strVeeamBackupJobName -WarningAction SilentlyContinue -ErrorAction Stop | Select -ExpandProperty Id
-        $strVeeamBackupEntpointJob = $true
-    }
-    catch {
-        try {
-            $strVeeamBackupJobId = Get-VBRJob -Name $strVeeamBackupJobName -WarningAction SilentlyContinue | Select -ExpandProperty Id
-            $strVeeamBackupEntpointJob = $false
-        }
-        catch {
+function Set-PrtgResult {
         
-        }
-    }
-  
-    # Überprüft, ob ein Veeam Backup Job gefunden wurde
-    if($strVeeamBackupJobId.count -ne 1) {
-        # Setzen des Fehlercodes
-        $strVeeamBackupJobResult =  "2:Keinen Backup Job gefunden!"
-    }
-    else {
-	    #Get the information from the latest Backup Job
-        if($strVeeamBackupEntpointJob -eq $true) {
-            $strVeeamBackupJobSession = Get-VBREPSession -WarningAction SilentlyContinue -ErrorAction Stop | Select JobId, Result, CreationTime | `
-                ?{$_.JobId -eq $strVeeamBackupJobId} | Sort -Descending -Property "CreationTime" | Select -First 1
-        }
-        else {
-                $strVeeamBackupJobSession = Get-VBRBackupSession -WarningAction SilentlyContinue | Select JobId, Result, CreationTime | `
-                    ?{$_.JobId -eq $strVeeamBackupJobId} | Sort -Descending -Property "CreationTime" | Select -First 1
-        }
-  
-        
+        Param (
+		    [Parameter(Mandatory=$true, Position=0)]
+            [ValidateNotNullOrEmpty()]
+		    [System.Object] $obLocalVBRxSession
+	    )
+
+        [string] $strVeeamBackupJobResult = ""
+
         # Auswertung des letzten Backup Jobs
-	    If ($strVeeamBackupJobSession.Result -eq "Success") { $strVeeamBackupJobResult = "0:" }
-        ElseIf ($strVeeamBackupJobSession.Result -eq "None") {$strVeeamBackupJobResult = "0:" }
-	    ElseIf ($strVeeamBackupJobSession.Result -eq "Warning") {$strVeeamBackupJobResult = "1:" }
-	    Else { $strVeeamBackupJobResult = "2:"}
+	    If ($obLocalVBRxSession.Result -eq "Success") {
+            $strVeeamBackupJobResult = "0:Job erfolgreich ausgeführt am"
+        }
+        ElseIf ($obLocalVBRxSession.Result -eq "Warning") {
+            $strVeeamBackupJobResult = "1:Job mit Warnungen ausgeführt am"
+        }
+	    ElseIf ($obLocalVBRxSession.Result -eq "Failed") {
+            $strVeeamBackupJobResult = "2:Job fehlgeschlagen am"
+        }
+	    Else {
+            $strVeeamBackupJobResult = "2:Der Job hat einen unbekannten Status."
+        }
 
         # Zeitstempel anhängen
-        $strVeeamBackupJobResult += $strVeeamBackupJobSession.CreationTime.ToString("dd.MM.yyyy HH:mm")
+        $strVeeamBackupJobResult += " " + $obLocalVBRxSession.CreationTime.ToString("dd.MM.yyyy HH:mm")
 
+        return $strVeeamBackupJobResult
     }
-	#Variable aus Scriptblock an Hauptskript zurückgeben
-	return $strVeeamBackupJobResult
 
-} -Args $strVeeamBackupJobName
+#------------------------------------------------------------[Modules]-------------------------------------------------------------
 
 
-# Powershell Remote Session beenden
-Remove-PSSession -ComputerName "$strVeeamBackupServer"
+
+#-----------------------------------------------------------[Execution]------------------------------------------------------------
+
+# Vorberreitung, um bestehende Funktionen an das Invoke Command zu übergeben
+$FunctionForInvokeCommand = "function Set-PrtgResult { ${function:Set-PrtgResult} }"
+
+# Nachstehende Befehle werden auf dem entfernen Computer ausgeführt
+$QueryResult = Invoke-Command -Computername $PrtgDevice -Args $VeeamBRJobName, $FunctionForInvokeCommand -ScriptBlock {
+
+    # Variablen übergeben
+	param(
+        [string] $strVeeamBackupJobName,
+        [System.Object] $FunctionForInvokeCommand
+    )
+
+    # Bereitgestellte Funktion wird aufgerufen
+    . ([ScriptBlock]::Create($FunctionForInvokeCommand))
+    
+    # Füge das Veeam Powershell SnapIn zu aktuellen Sitzung hinzu
+    try {
+        Add-PSSnapin -Name VeeamPSSnapIn
+    }
+    catch {
+        return "2:Powershell - Veeam PSSnapIn konnte nicht geladen werden!"
+    }
+
+    
+    # Überprüfung, ob es bei dem Jobname um ein Backup & Replication Objekt handelt
+    if (Get-VBRJob -Name $strVeeamBackupJobName -ErrorAction SilentlyContinue) {
+
+        # Auslesen des letzten Ausführungsergebnis vom dem angegebenen Veeam Backup Job
+        $obVBRSession = Get-VBRBackupSession -Name $strVeeamBackupJobName | Select JobId, Result, CreationTime | Where-Object { $_.JobId -eq (Get-VBRJob -Name $strVeeamBackupJobName | Select -ExpandProperty Id) } | `
+                        Sort -Descending -Property "CreationTime" | Select -First 1
+     
+        # Auswertung des Ausführungsergebnis. Rückgabewert entspricht dem notwendigen Format für PRTG
+        if($obVBRSession) {
+            Set-PrtgResult -obLocalVBRxSession $obVBRSession
+        }
+        else {
+            return "1:Der Job ist bisher noch nie gelaufen."
+        }
+    }
+    # Überprüfung, ob es bei dem Jobname um ein Backup & Replication Entpoint Objekt handelt.
+    elseif (Get-VBREPJob -Name $strVeeamBackupJobName -ErrorAction SilentlyContinue) {
+
+        # Auslesen des letzten Ausführungsergebnis vom dem angegebenen Veeam Backup Job
+        $obVBREPSession = Get-VBREPSession -Name $strVeeamBackupJobName | Select JobId, Result, CreationTime | Where-Object { $_.JobId -eq (Get-VBREPJob -Name $strVeeamBackupJobName | Select -ExpandProperty Id) } | `
+                            Sort -Descending -Property "CreationTime" | Select -First 1
+
+        # Auswertung des Ausführungsergebnis. Rückgabewert entspricht dem notwendigen Format für PRTG
+        if($obVBREPSession) {
+            Set-PrtgResult -obLocalVBRxSession $obVBREPSession
+        }
+        else {
+            return "1:Der Job ist bisher noch nie gelaufen."
+        }
+    }
+    else {
+        return "1:Es konnte kein Job mit dem Namen '$strVeeamBackupJobName' gefunden werden!"
+    }
+}
 
 # String splitten
-$exitcode = $strVeeamBackupJobResult -Split(':')
+$exitcode = $QueryResult -Split(':')
 
 # Ausgabe für PRTG
-write-host $strVeeamBackupJobResult
+write-host $QueryResult
 
-# Script beenden
+# Script mit entsprechenden Fehlercode beenden
 exit $exitcode[0]
