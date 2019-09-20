@@ -102,99 +102,99 @@ Clear-Host
 #-----------------------------------------------------------[Functions]------------------------------------------------------------
 
 function Set-PrtgResult {
-      Param (
-      [Parameter(mandatory=$True,Position=0)]
-      [string]$Channel,
+    Param (
+        [Parameter(mandatory=$True,Position=0)]
+        [string]$Channel,
     
-      [Parameter(mandatory=$True,Position=1)]
-      [int] $Value,
+        [Parameter(mandatory=$True,Position=1)]
+        [string]$Value,
     
-      [Parameter(mandatory=$True,Position=2)]
-      [string]$Unit,
+        [Parameter(mandatory=$True,Position=2)]
+        [string]$Unit,
 
-      [Parameter(mandatory=$False)]
-      [alias('mw')]
-      [string]$MaxWarn,
+        [Parameter(mandatory=$False)]
+        [alias('mw')]
+        [string]$MaxWarn,
 
-      [Parameter(mandatory=$False)]
-      [alias('minw')]
-      [string]$MinWarn,
+        [Parameter(mandatory=$False)]
+        [alias('minw')]
+        [string]$MinWarn,
     
-      [Parameter(mandatory=$False)]
-      [alias('me')]
-      [string]$MaxError,
+        [Parameter(mandatory=$False)]
+        [alias('me')]
+        [string]$MaxError,
     
-      [Parameter(mandatory=$False)]
-      [alias('wm')]
-      [string]$WarnMsg,
+        [Parameter(mandatory=$False)]
+        [alias('wm')]
+        [string]$WarnMsg,
     
-      [Parameter(mandatory=$False)]
-      [alias('em')]
-      [string]$ErrorMsg,
+        [Parameter(mandatory=$False)]
+        [alias('em')]
+        [string]$ErrorMsg,
     
-      [Parameter(mandatory=$False)]
-      [alias('mo')]
-      [string]$Mode,
+        [Parameter(mandatory=$False)]
+        [alias('mo')]
+        [string]$Mode,
     
-      [Parameter(mandatory=$False)]
-      [alias('sc')]
-      [switch]$ShowChart,
+        [Parameter(mandatory=$False)]
+        [alias('sc')]
+        [switch]$ShowChart,
     
-      [Parameter(mandatory=$False)]
-      [alias('ss')]
-      [ValidateSet('One','Kilo','Mega','Giga','Tera','Byte','KiloByte','MegaByte','GigaByte','TeraByte','Bit','KiloBit','MegaBit','GigaBit','TeraBit')]
-      [string]$SpeedSize,
+        [Parameter(mandatory=$False)]
+        [alias('ss')]
+        [ValidateSet('One','Kilo','Mega','Giga','Tera','Byte','KiloByte','MegaByte','GigaByte','TeraByte','Bit','KiloBit','MegaBit','GigaBit','TeraBit')]
+        [string]$SpeedSize,
 
-      [Parameter(mandatory=$False)]
-      [ValidateSet('One','Kilo','Mega','Giga','Tera','Byte','KiloByte','MegaByte','GigaByte','TeraByte','Bit','KiloBit','MegaBit','GigaBit','TeraBit')]
-      [string]$VolumeSize,
+        [Parameter(mandatory=$False)]
+        [ValidateSet('One','Kilo','Mega','Giga','Tera','Byte','KiloByte','MegaByte','GigaByte','TeraByte','Bit','KiloBit','MegaBit','GigaBit','TeraBit')]
+        [string]$VolumeSize,
     
-      [Parameter(mandatory=$False)]
-      [alias('dm')]
-      [ValidateSet('Auto','All')]
-      [string]$DecimalMode,
+        [Parameter(mandatory=$False)]
+        [alias('dm')]
+        [ValidateSet('Auto','All')]
+        [string]$DecimalMode,
     
-      [Parameter(mandatory=$False)]
-      [alias('w')]
-      [switch]$Warning,
+        [Parameter(mandatory=$False)]
+        [alias('w')]
+        [switch]$Warning,
     
-      [Parameter(mandatory=$False)]
-      [string]$ValueLookup
-      )
+        [Parameter(mandatory=$False)]
+        [string]$ValueLookup
+    )
     
-      $StandardUnits = @('BytesBandwidth','BytesMemory','BytesDisk','Temperature','Percent','TimeResponse','TimeSeconds','Custom','Count','CPU','BytesFile','SpeedDisk','SpeedNet','TimeHours')
-      $LimitMode = $false
+    $StandardUnits = @('BytesBandwidth','BytesMemory','BytesDisk','Temperature','Percent','TimeResponse','TimeSeconds','Custom','Count','CPU','BytesFile','SpeedDisk','SpeedNet','TimeHours')
+    $LimitMode = $false
     
-      $Result  = "`t<result>`n"
-      $Result += "`t`t<channel>$Channel</channel>`n"
-      $Result += "`t`t<value>$Value</value>`n"
+    $Result  = "`t<result>`n"
+    $Result += "`t`t<channel>$Channel</channel>`n"
+    $Result += "`t`t<value>$Value</value>`n"
     
-      if ($StandardUnits -contains $Unit) {
-          $Result += "`t`t<unit>$Unit</unit>`n"
-      } elseif ($Unit) {
-          $Result += "`t`t<unit>custom</unit>`n"
-          $Result += "`t`t<customunit>$Unit</customunit>`n"
-      }
+    if ($StandardUnits -contains $Unit) {
+        $Result += "`t`t<unit>$Unit</unit>`n"
+    }
+    elseif ($Unit) {
+        $Result += "`t`t<unit>custom</unit>`n"
+    $Result += "`t`t<customunit>$Unit</customunit>`n"
+    }
     
-      #if (!($Value -is [int])) { $Result += "    <float>1</float>`n" }
-      if ($Mode)        { $Result += "`t`t<mode>$Mode</mode>`n" }
-      if ($MaxWarn)     { $Result += "`t`t<limitmaxwarning>$MaxWarn</limitmaxwarning>`n"; $LimitMode = $true }
-      if ($MaxError)    { $Result += "`t`t<limitminwarning>$MinWarn</limitminwarning>`n"; $LimitMode = $true }
-      if ($MaxError)    { $Result += "`t`t<limitmaxerror>$MaxError</limitmaxerror>`n"; $LimitMode = $true }
-      if ($WarnMsg)     { $Result += "`t`t<limitwarningmsg>$WarnMsg</limitwarningmsg>`n"; $LimitMode = $true }
-      if ($ErrorMsg)    { $Result += "`t`t<limiterrormsg>$ErrorMsg</limiterrormsg>`n"; $LimitMode = $true }
-      if ($LimitMode)   { $Result += "`t`t<limitmode>1</limitmode>`n" }
-      if ($SpeedSize)   { $Result += "`t`t<speedsize>$SpeedSize</speedsize>`n" }
-      if ($VolumeSize)  { $Result += "`t`t<volumesize>$VolumeSize</volumesize>`n" }
-      if ($DecimalMode) { $Result += "`t`t<decimalmode>$DecimalMode</decimalmode>`n" }
-      if ($Warning)     { $Result += "`t`t<warning>1</warning>`n" }
-      if ($ValueLookup) { $Result += "`t`t<ValueLookup>$ValueLookup</ValueLookup>`n" }
+    if (!($Value -is [int])) { $Result += "`t`t<float>1</float>`n" }
+    if ($Mode)               { $Result += "`t`t<mode>$Mode</mode>`n" }
+    if ($MaxWarn)            { $Result += "`t`t<limitmaxwarning>$MaxWarn</limitmaxwarning>`n"; $LimitMode = $true }
+    if ($MaxError)           { $Result += "`t`t<limitminwarning>$MinWarn</limitminwarning>`n"; $LimitMode = $true }
+    if ($MaxError)           { $Result += "`t`t<limitmaxerror>$MaxError</limitmaxerror>`n"; $LimitMode = $true }
+    if ($WarnMsg)            { $Result += "`t`t<limitwarningmsg>$WarnMsg</limitwarningmsg>`n"; $LimitMode = $true }
+    if ($ErrorMsg)           { $Result += "`t`t<limiterrormsg>$ErrorMsg</limiterrormsg>`n"; $LimitMode = $true }
+    if ($LimitMode)          { $Result += "`t`t<limitmode>1</limitmode>`n" }
+    if ($SpeedSize)          { $Result += "`t`t<speedsize>$SpeedSize</speedsize>`n" }
+    if ($VolumeSize)         { $Result += "`t`t<volumesize>$VolumeSize</volumesize>`n" }
+    if ($DecimalMode)        { $Result += "`t`t<decimalmode>$DecimalMode</decimalmode>`n" }
+    if ($Warning)            { $Result += "`t`t<warning>1</warning>`n" }
+    if ($ValueLookup)        { $Result += "`t`t<ValueLookup>$ValueLookup</ValueLookup>`n" }
+    if (!($ShowChart))       { $Result += "`t`t<showchart>0</showchart>`n" }
     
-      if (!($ShowChart)) { $Result += "`t`t<showchart>0</showchart>`n" }
+    $Result += "`t</result>`n"
     
-      $Result += "`t</result>`n"
-    
-  return $Result
+    return $Result
 }
 
 function Set-PrtgError {
