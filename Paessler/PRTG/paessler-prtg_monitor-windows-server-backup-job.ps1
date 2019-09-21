@@ -31,6 +31,7 @@ Date                   Comment
 -----------------------------------------------
 10.03.2019, 11:12 Uhr  Initial community release
 10.03.2019, 17:01 Uhr  Code base revised
+21.09.2019, 21:26 Uhr  Changed output in Set-PrtgError
 
 
 .COMPONENT
@@ -64,18 +65,20 @@ Clear-Host
 
 function Set-PrtgError {
 	Param (
-		[Parameter(Position=0)]
+		[Parameter(Mandatory=$true)]
+        	[ValidateNotNullOrEmpty()]
 		[string]$PrtgErrorText
 	)
 	
-	@"
-<prtg>
-  <error>1</error>
-  <text>$PrtgErrorText</text>
-</prtg>
-"@
+    $strXmlOutput = "<prtg>`n"
+    $strXmlOutput += "`t<error>1</error>`n"
+    $strXmlOutput += "`t<text>$PrtgErrorText</text>`n"
+    $strXmlOutput += "</prtg>"
 
-exit
+    # Output Xml
+    $strXmlOutput
+
+    exit
 }
 
 #-------------------------------------------------------------[Modules]------------------------------------------------------------
