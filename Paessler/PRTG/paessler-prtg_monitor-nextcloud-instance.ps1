@@ -8,13 +8,16 @@ RISK OF THE USE OR THE RESULTS FROM THE USE OF THIS CODE REMAINS WITH THE USER.
 
 .DESCRIPTION
 This script returns Xml for a custom PRTG sensor providing the following channels
-- Active Users Last 5min
-- Active Users Last 1Hour
-- Active Users Last 24Hours
+- CPU Load 1 Min
+- CPU Load 5 Min
+- CPU Load 15 Min
 - Memory Total
 - Memory in Use
 - Swap Total
 - Swap Free
+- Active Users Last 5min
+- Active Users Last 1Hour
+- Active Users Last 24Hours
 - SQL DB Size
 - Share Links without Password
 - Apps with Updates
@@ -51,6 +54,7 @@ Date                   Comment
 21.09.2019, 21:00 Uhr  Changed output in Set-PrtgError
 21.09.2019, 21:10 Uhr  Fixed variable name in Set-PrtgResult
 21.09.2019, 21:10 Uhr  Set MaxWarning to "0" for Apps with Updates 
+21.09.2019, 21:28 Uhr  Added new channels to description
 
 .COMPONENT
 
