@@ -101,6 +101,24 @@ Clear-Host
 
 #-----------------------------------------------------------[Functions]------------------------------------------------------------
 
+function Set-PrtgError {
+	Param (
+		[Parameter(Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+		[string]$PrtgErrorText
+	)
+	
+    $strXmlOutput = "<prtg>`n"
+    $strXmlOutput += "`t<error>1</error>`n"
+    $strXmlOutput += "`t<text>$PrtgErrorText</text>`n"
+    $strXmlOutput += "</prtg>"
+
+    # Output Xml
+    $strXmlOutput
+
+    exit
+}
+
 function Set-PrtgResult {
     Param (
         [Parameter(mandatory=$True,Position=0)]
@@ -180,7 +198,7 @@ function Set-PrtgResult {
     if (!($Value -is [int])) { $Result += "`t`t<float>1</float>`n" }
     if ($Mode)               { $Result += "`t`t<mode>$Mode</mode>`n" }
     if ($MaxWarn)            { $Result += "`t`t<limitmaxwarning>$MaxWarn</limitmaxwarning>`n"; $LimitMode = $true }
-    if ($MaxError)           { $Result += "`t`t<limitminwarning>$MinWarn</limitminwarning>`n"; $LimitMode = $true }
+    if ($MinWarn)            { $Result += "`t`t<limitminwarning>$MinWarn</limitminwarning>`n"; $LimitMode = $true }
     if ($MaxError)           { $Result += "`t`t<limitmaxerror>$MaxError</limitmaxerror>`n"; $LimitMode = $true }
     if ($WarnMsg)            { $Result += "`t`t<limitwarningmsg>$WarnMsg</limitwarningmsg>`n"; $LimitMode = $true }
     if ($ErrorMsg)           { $Result += "`t`t<limiterrormsg>$ErrorMsg</limiterrormsg>`n"; $LimitMode = $true }
@@ -195,24 +213,6 @@ function Set-PrtgResult {
     $Result += "`t</result>`n"
     
     return $Result
-}
-
-function Set-PrtgError {
-	Param (
-		[Parameter(
-            Mandatory=$true
-        )]
-        [ValidateNotNullOrEmpty()]
-		[string]$PrtgErrorText
-	)
-	
-	@"
-<prtg>
-  <error>1</error>
-  <text>$PrtgErrorText</text>
-</prtg>
-"@
-exit
 }
 
 #-------------------------------------------------------------[Modules]------------------------------------------------------------
