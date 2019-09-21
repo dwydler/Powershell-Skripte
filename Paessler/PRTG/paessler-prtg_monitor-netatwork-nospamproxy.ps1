@@ -43,6 +43,8 @@ Date                   Comment
 07.09.2019, 16:00 Uhr  Code base revised
 08.09.2019, 16:31 Uhr  Query all Gateway Roles
 17.09.2019, 17:01 Uhr  Rewrited codebase for query gateway role
+21.09.2019, 21:20 Uhr  Changed output in Set-PrtgError
+21.09.2019, 21:20 Uhr  Fixed variable name in Set-PrtgResult
 
 
 The following parameters of the message tracking information are available
