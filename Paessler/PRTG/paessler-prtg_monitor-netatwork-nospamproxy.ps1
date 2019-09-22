@@ -315,7 +315,6 @@ else {
     $xmlOutput += Set-PrtgResult -Channel "Out DeliveryPending" -Value $QueryResult[3] -Unit Count -ShowChart 
 }
 
-
 $xmlOutput += '</prtg>'
 
 # Return Xml
