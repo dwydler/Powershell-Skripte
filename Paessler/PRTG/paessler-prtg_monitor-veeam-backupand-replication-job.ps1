@@ -38,8 +38,8 @@ Date                   Comment
 Veeam Backup & Replication Powershell-Module
 
 .LINK
-http://www.vmbaggum.nl/2015/03/monitor-veeam-backup-jobs-with-prtg/
-https://github.com/dwydler/Powershell-Skripte/blob/master/Paessler/PRTG/paessler-prtg_monitor-veeam-backupand-replication-job.ps1
+www.vmbaggum.nl/2015/03/monitor-veeam-backup-jobs-with-prtg/
+github.com/dwydler/Powershell-Skripte/blob/master/Paessler/PRTG/paessler-prtg_monitor-veeam-backupand-replication-job.ps1
 
 
 .EXAMPLE
@@ -134,13 +134,11 @@ $QueryResult = Invoke-Command -Computername $PrtgDevice -Args $VeeamBRJobName, $
         return "2:Powershell - Veeam PSSnapIn konnte nicht geladen werden!"
     }
 
-    
     # Überprüfung, ob es bei dem Jobname um ein Backup & Replication Objekt handelt
     if (Get-VBRJob -Name $strVeeamBackupJobName -ErrorAction SilentlyContinue) {
 
         # Auslesen des letzten Ausführungsergebnis vom dem angegebenen Veeam Backup Job
-        $obVBRSession = Get-VBRBackupSession -Name $strVeeamBackupJobName | Select JobId, Result, CreationTime | Where-Object { $_.JobId -eq (Get-VBRJob -Name $strVeeamBackupJobName | Select -ExpandProperty Id) } | `
-                        Sort -Descending -Property "CreationTime" | Select -First 1
+        $obVBRSession = Get-VBRBackupSession -Name $strVeeamBackupJobName | Select JobId, Result, CreationTime | Where-Object { $_.JobId -eq (Get-VBRJob -Name $strVeeamBackupJobName | Select -ExpandProperty Id) } | Sort -Descending -Property "CreationTime" | Select -First 1
      
         # Auswertung des Ausführungsergebnis. Rückgabewert entspricht dem notwendigen Format für PRTG
         if($obVBRSession) {
@@ -154,8 +152,7 @@ $QueryResult = Invoke-Command -Computername $PrtgDevice -Args $VeeamBRJobName, $
     elseif (Get-VBREPJob -Name $strVeeamBackupJobName -ErrorAction SilentlyContinue) {
 
         # Auslesen des letzten Ausführungsergebnis vom dem angegebenen Veeam Backup Job
-        $obVBREPSession = Get-VBREPSession -Name $strVeeamBackupJobName | Select JobId, Result, CreationTime | Where-Object { $_.JobId -eq (Get-VBREPJob -Name $strVeeamBackupJobName | Select -ExpandProperty Id) } | `
-                            Sort -Descending -Property "CreationTime" | Select -First 1
+        $obVBREPSession = Get-VBREPSession -Name $strVeeamBackupJobName | Select JobId, Result, CreationTime | Where-Object { $_.JobId -eq (Get-VBREPJob -Name $strVeeamBackupJobName | Select -ExpandProperty Id) } | Sort -Descending -Property "CreationTime" | Select -First 1
 
         # Auswertung des Ausführungsergebnis. Rückgabewert entspricht dem notwendigen Format für PRTG
         if($obVBREPSession) {
