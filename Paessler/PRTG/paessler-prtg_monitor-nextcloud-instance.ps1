@@ -39,8 +39,9 @@ Output the values in xml format
  
 .NOTES
 File:           paessler-prtg_monitor-nextcloud-instance.ps1
-Version:        1.0
-Author:         Daniel Wydler
+Version:        1.1
+Author:         FrankFischer/freaky-media
+		Daniel Wydler
 Creation Date:  20.09.2019, 12:07 Uhr
 Purpose/Change:
  
