@@ -32,6 +32,7 @@ Date                   Comment
 10.03.2019, 10:54 Uhr  Initial community release
 18.09.2019, 21:39 Uhr  Code base revised
 19.09.2019, 00:11 Uhr  Added informations to the header
+27.09.2019, 09:49 Uhr  Fixed query of JobId
 
 
 .COMPONENT
@@ -138,7 +139,8 @@ $QueryResult = Invoke-Command -Computername $PrtgDevice -Args $VeeamBRJobName, $
     if (Get-VBRJob -Name $strVeeamBackupJobName -ErrorAction SilentlyContinue) {
 
         # Auslesen des letzten Ausführungsergebnis vom dem angegebenen Veeam Backup Job
-        $obVBRSession = Get-VBRBackupSession -Name $strVeeamBackupJobName | Select JobId, Result, CreationTime | Where-Object { $_.JobId -eq (Get-VBRJob -Name $strVeeamBackupJobName | Select -ExpandProperty Id) } | Sort -Descending -Property "CreationTime" | Select -First 1
+        $strVeeamBackupJobId = Get-VBRJob -Name $strVeeamBackupJobName | Select -ExpandProperty Id
+        $obVBRSession = Get-VBRBackupSession | Select JobId, Result, CreationTime | Where-Object { $_.JobId -eq $strVeeamBackupJobId } | Sort -Descending -Property "CreationTime" | Select -First 1
      
         # Auswertung des Ausführungsergebnis. Rückgabewert entspricht dem notwendigen Format für PRTG
         if($obVBRSession) {
@@ -152,7 +154,8 @@ $QueryResult = Invoke-Command -Computername $PrtgDevice -Args $VeeamBRJobName, $
     elseif (Get-VBREPJob -Name $strVeeamBackupJobName -ErrorAction SilentlyContinue) {
 
         # Auslesen des letzten Ausführungsergebnis vom dem angegebenen Veeam Backup Job
-        $obVBREPSession = Get-VBREPSession -Name $strVeeamBackupJobName | Select JobId, Result, CreationTime | Where-Object { $_.JobId -eq (Get-VBREPJob -Name $strVeeamBackupJobName | Select -ExpandProperty Id) } | Sort -Descending -Property "CreationTime" | Select -First 1
+        $strVeeamBackupJobId = Get-VBREPJob -Name $strVeeamBackupJobName | Select -ExpandProperty Id
+        $obVBREPSession = Get-VBREPSession | Select JobId, Result, CreationTime | Where-Object { $_.JobId -eq $strVeeamBackupJobId } | Sort -Descending -Property "CreationTime" | Select -First 1
 
         # Auswertung des Ausführungsergebnis. Rückgabewert entspricht dem notwendigen Format für PRTG
         if($obVBREPSession) {
@@ -175,3 +178,4 @@ write-host $QueryResult
 
 # Script mit entsprechenden Fehlercode beenden
 exit $exitcode[0]
+
