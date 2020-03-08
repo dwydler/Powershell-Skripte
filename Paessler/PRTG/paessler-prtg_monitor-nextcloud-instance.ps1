@@ -233,8 +233,8 @@ function Set-PrtgResult {
 [string] $strNcApiUrl = "https://$NCurl/ocs/v2.php/apps/serverinfo/api/v1/info"
 [System.Object] $obBase64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($NcUsername+":"+$NcPassword))
 
-$obNcHeaders[“OCS-APIRequest”] = "true"
-$obNcHeaders[“Authorization”]="Basic $obBase64AuthInfo"
+$obNcHeaders["OCS-APIRequest"] = "true"
+$obNcHeaders["Authorization"]="Basic $obBase64AuthInfo"
 
 
 try {
