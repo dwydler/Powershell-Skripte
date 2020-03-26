@@ -62,14 +62,14 @@ Param (
    [Parameter(
         ValueFromPipelineByPropertyName,
         Position=0,
-        Mandatory=$false
+        Mandatory=$true
     )]
    [string] $PrtgDevice,
 
     [Parameter(
         ValueFromPipelineByPropertyName,
         Position=1,
-        Mandatory=$false
+        Mandatory=$true
     )]
     [ValidateNotNullOrEmpty()]
     [string] $WindowsUsername,
@@ -77,7 +77,7 @@ Param (
     [Parameter(
         ValueFromPipelineByPropertyName,
         Position=2,
-        Mandatory=$false
+        Mandatory=$true
     )]
     [ValidateNotNullOrEmpty()]
     [string] $WindowsPassword,
@@ -86,7 +86,7 @@ Param (
     [Parameter(
         ValueFromPipelineByPropertyName,
         Position=3,
-        Mandatory=$false
+        Mandatory=$true
     )]
     [ValidateNotNullOrEmpty()]
     [string] $WindowsDomain
