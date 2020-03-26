@@ -1,26 +1,18 @@
 <#
 Das PowerShell Skript liest die aktiven Sitzungen auf dem VMware Connection Server aus.
-Es werden folgende Werte als separaten Kanal im Sensor ausgegeben:
-Aktive Sitzungen, Interne Sitzungen, Externe Sitzungen,  Physikalische Sitzungen
+Die Werte werden als separaten Kanal im Sensor ausgegeben.
+
 
 THIS CODE IS MADE AVAILABLE AS IS, WITHOUT WARRANTY OF ANY KIND. THE ENTIRE
 RISK OF THE USE OR THE RESULTS FROM THE USE OF THIS CODE REMAINS WITH THE USER. 
 
 .DESCRIPTION
 This script returns Xml for a custom PRTG sensor providing the following channels
-- CPU Load 1 Min
-- CPU Load 5 Min
-- CPU Load 15 Min
-- Memory Total
-- Memory in Use
-- Swap Total
-- Swap Free
-- Active Users Last 5min
-- Active Users Last 1Hour
-- Active Users Last 24Hours
-- SQL DB Size
-- Share Links without Password
-- Apps with Updates
+- Aktive Sitzungen
+- Interne Sitzungen
+- Externe Sitzungen
+- Physikalische Sitzungen
+- Getrennte Sitzungen
 
 
 .PARAMETER PrtgDevice
@@ -51,6 +43,8 @@ Purpose/Change:
 Date                   Comment
 -----------------------------------------------
 25.03.2020, 14:44 Uhr  Initial community release
+26.03.2020, 09:55 Uhr  New channel "Getrennte Sitzungen"
+26.03.2020, 10:10 Uhr  Optimize some querys
 
 
 .COMPONENT
@@ -296,10 +290,12 @@ $QueryResult = Invoke-Command -Computername $PrtgDevice -ArgumentList $PrtgDevic
         $strXmlOutput = "<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>`n"
         $strXmlOutput += "<prtg>`n"
 
-        $strXmlOutput += Set-PrtgResult -Channel "Aktive Sitzungen" -Value ($objVMwareHorizonViewResults | Select-Object -ExpandProperty Results | Select-Object -ExpandProperty NamesData | Select-Object -Property UserName, SecurityGatewayDNS).count -Unit Count -ShowChart
-        $strXmlOutput += Set-PrtgResult -Channel "Interne Sitzungen" -Value ($objVMwareHorizonViewResults | Select-Object -ExpandProperty Results | Select-Object -ExpandProperty NamesData | Where-Object { $_.SecurityGatewayDNS -like $strVMwareHorizonSecurityGatewayDnsInteral } | Select-Object -Property UserName | Measure-Object).count -Unit Count -ShowChart
-        $strXmlOutput += Set-PrtgResult -Channel "Externe Sitzungen" -Value ($objVMwareHorizonViewResults | Select-Object -ExpandProperty Results | Select-Object -ExpandProperty NamesData | Where-Object { $_.SecurityGatewayDNS -like $strVMwareHorizonSecurityGatewayDnsExternal } | Select-Object -Property UserName | Measure-Object).count -Unit Count -ShowChart
-        $strXmlOutput += Set-PrtgResult -Channel "Physikalische Sitzungen" -Value ($objVMwareHorizonViewResults | Select-Object -ExpandProperty Results | Select-Object -ExpandProperty NamesData | Where-Object { $_.DesktopSource -like "UNMANAGED" } | Select-Object -Property UserName | Measure-Object).count -Unit Count -ShowChart
+        $strXmlOutput += Set-PrtgResult -Channel "Aktive Sitzungen" -Value ($objVMwareHorizonViewResults.Results.NamesData | Select-Object -Property UserName, SecurityGatewayDNS).count -Unit Count -ShowChart
+        $strXmlOutput += Set-PrtgResult -Channel "Interne Sitzungen" -Value ($objVMwareHorizonViewResults.Results.NamesData | Where-Object { $_.SecurityGatewayDNS -like $strVMwareHorizonSecurityGatewayDnsInteral } | Select-Object -Property UserName | Measure-Object).count -Unit Count -ShowChart
+        $strXmlOutput += Set-PrtgResult -Channel "Externe Sitzungen" -Value ($objVMwareHorizonViewResults.Results.NamesData | Where-Object { $_.SecurityGatewayDNS -like $strVMwareHorizonSecurityGatewayDnsExternal } | Select-Object -Property UserName | Measure-Object).count -Unit Count -ShowChart
+        $strXmlOutput += Set-PrtgResult -Channel "Physikalische Sitzungen" -Value ($objVMwareHorizonViewResults.Results.NamesData | Where-Object { $_.DesktopSource -like "UNMANAGED" } | Select-Object -Property UserName | Measure-Object).count -Unit Count -ShowChart
+
+        $strXmlOutput += Set-PrtgResult -Channel "Getrennte Sitzungen" -Value ($objVMwareHorizonViewResults | Select-Object -ExpandProperty Results | Select-Object -ExpandProperty NamesData | Where-Object { $_.SecurityGatewayDNS -like "" -and  $_.DesktopSource -like "VIRTUAL_CENTER" } | Select-Object -Property UserName | Measure-Object).count -Unit Count -ShowChart
 
         $strXmlOutput += "</prtg>"
 
