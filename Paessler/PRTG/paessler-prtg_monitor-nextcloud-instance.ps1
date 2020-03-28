@@ -108,6 +108,9 @@ Clear-Host
 
 [Xml] $xmlGetNCStatusPage = $null
 
+# Verwende TLS 1.2 für den Verbindungsaufbau zur Nextcloud Instanz
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
 #-----------------------------------------------------------[Functions]------------------------------------------------------------
 
 function Set-PrtgError {
