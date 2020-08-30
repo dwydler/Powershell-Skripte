@@ -253,7 +253,7 @@ ForEach ($sn in $aSerialNumbers) {
         Write-Log -LogText "Abfrage der Daten des Geräts bei Fujitsu." -LogStatus Info
         $wroSearchHtml= Invoke-WebRequest "https://support.ts.fujitsu.com/Adler/Default.aspx?Lng=de&GotoDiv=Warranty/WarrantyStatus&DivID=indexwarranty&GotoUrl=IndexWarranty&Ident=$sn"
 
-        [array] $arrFujitsuDeviceWarrentyInfos = $wroSearchHtml.InputFields | Where-Object { ($_.name -eq "Ident") -or ($_.name -eq "Produkt") -or ($_.name -eq "Firstuse") -or ($_.name -eq "WarrantyEndDate")  -or ($_.name -eq "WCode") `
+        [array] $arrFujitsuDeviceWarrentyInfos = $wroSearchHtml.InputFields | Where-Object { ($_.name -eq "Ident") -or ($_.name -eq "Product") -or ($_.name -eq "Firstuse") -or ($_.name -eq "WarrantyEndDate")  -or ($_.name -eq "WCode") `
             -or ($_.name -eq "WCodeDesc") -or ($_.name -eq "PartNumber") -or ($_.name -eq "WGR") -or ($_.name -eq "SOG") } | Select-Object Name, Value
         
         Write-Log -LogText "`tProduktname:`t`t`tFujitsu $($arrFujitsuDeviceWarrentyInfos[1].value)" -LogStatus Info 
