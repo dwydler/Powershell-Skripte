@@ -232,7 +232,13 @@ function Set-PrtgResult {
 
 #-----------------------------------------------------------[Execution]------------------------------------------------------------
 
+$ActiveSecProtoType = [System.Net.SecurityProtocolType]'Tls12'
+[System.Net.ServicePointManager]::SecurityProtocol = $ActiveSecProtoType
 
+# Ueberprüfung der SSK Prüfung generell deaktivieren
+#[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
+
+#
 [string] $strNcApiUrl = "https://$NCurl/ocs/v2.php/apps/serverinfo/api/v1/info"
 [System.Object] $obBase64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($NcUsername+":"+$NcPassword))
 
