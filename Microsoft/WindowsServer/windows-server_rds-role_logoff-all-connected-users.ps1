@@ -25,7 +25,7 @@ None
  
 .NOTES
 File:           windows-server_rds-role_logoff-all-connected-users.ps1
-Version:        1.1
+Version:        1.2
 Author:         Daniel Wydler
 Creation Date:  10.03.2019, 12:45 Uhr
 Purpose/Change:
@@ -34,7 +34,7 @@ Date                   Comment
 -----------------------------------------------
 10.03.2019, 12:45 Uhr  Initial community release
 15.09.2019, 15:43 Uhr  Code base revised
-
+04.02.2021, 21:09 Uhr  Fixed query problem with getrennte sessions
 
 .COMPONENT
 None
@@ -202,7 +202,7 @@ $queryResults = qwinsta.exe | foreach { ($_.trim() -replace "\s+",",") } | Conve
 
 ForEach($QueryResult in $QueryResults) {
 
-    If( ($QueryResult.SITZUNGSNAME -ne "services") -and ($QueryResult.SITZUNGSNAME -ne ">console") -and ($QueryResult.SITZUNGSNAME -ne "rdp-tcp") -and ($QueryResult.BENUTZERNAME -ne $env:USERNAME) ) {
+    If( ($QueryResult.SITZUNGSNAME -ne "services") -and ($QueryResult.SITZUNGSNAME -ne "console") -and ($QueryResult.SITZUNGSNAME -ne "rdp-tcp") -and ($QueryResult.BENUTZERNAME -ne $env:USERNAME) ) {
 
         Write-Log -LogText "Benutzer: $($QueryResult.BENUTZERNAME), ID: $($QueryResult.ID), Status: $($QueryResult.STATUS) gefunden." -LogStatus Info
 
@@ -213,7 +213,13 @@ ForEach($QueryResult in $QueryResults) {
 
         if ($Logoff) {
             Write-Log -LogText "$($QueryResult.BENUTZERNAME) wurde abgemeldet." -LogStatus Success
-            logoff.exe $QueryResult.ID
+            
+            if($QueryResult.ID -eq "Getr.") {
+                logoff.exe $QueryResult.BENUTZERNAME
+            }
+            else {
+                logoff.exe $QueryResult.ID
+            }
         }
     }
 }
