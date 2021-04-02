@@ -36,6 +36,11 @@ Date                   Comment
 31.01.2021, 12:19 Uhr  Added parameter to Set-PrtgResult
 31.01.2021, 13:45 Uhr  Fixed if query in Set-PrtgResult
 31.01.2021, 17:23 Uhr  Code base revised
+27.03.2021, 19:45 Uhr  Added Connection test for remote computer
+27.03.2021, 20:03 Uhr  Fixed error handling in Invoke-Command
+27.03.2021, 20:22 Uhr  Fixed query for computer backup jobs
+28.03.2021, 18;44 Uhr  Fixed query for computer backup jobs
+28.03.2021, 18:54 Uhr  Fixed evaluation of job status
 
 
 .COMPONENT
@@ -75,8 +80,8 @@ Clear-Host
 
 #----------------------------------------------------------[Declarations]----------------------------------------------------------
 
-[string] $FunctionForInvokeCommand = ""
 [string] $strXmlOutput = ""
+[System.Object] $objQueryResult = $null
 
 #-----------------------------------------------------------[Functions]------------------------------------------------------------
 
@@ -208,96 +213,131 @@ function Set-PrtgResult {
 
 #-----------------------------------------------------------[Execution]------------------------------------------------------------
 
-# Vorberreitung, um bestehende Funktionen an das Invoke Command zu uebergeben
-$FunctionForInvokeCommand = "function Set-PrtgResult { ${function:Set-PrtgResult} }"
-
-
-$QueryResult = Invoke-Command -Computername $PrtgDevice -ScriptBlock {
-
-    try {
-        Add-PSSnapin -Name "VeeamPSSnapIn" -ErrorAction Stop
-    }
-    catch {
-        return $_
-    }
-
+### Check if the remote device is reachable over PowerShell Remoting
+If (-not (Test-NetConnection $PrtgDevice -port 5985 -InformationLevel Quiet)) {
+    Set-PrtgError "Gerät nicht erreichbar. PowerShell Remoting ativiert?"
 }
 
-if ($QueryResult -ne $null) {
-    Set-PrtgError $QueryResult
-}
 
-# Nachstehende Befehle werden auf dem entfernen Computer ausgefuehrt
-$QueryResult = Invoke-Command -Computername $PrtgDevice -Args $VeeamBRJobName -ScriptBlock {
+### The following commands will be executed on the remote computer
+$objQueryResult = Invoke-command –ComputerName $PrtgDevice -Args $VeeamBRJobName -ScriptBlock {
 
-    # Variablen uebergeben
+    ### Declarations
     param(
         [string] $strVeeamBackupJobName
     )
 
-    # Fuege das Veeam Powershell SnapIn zu aktuellen Sitzung hinzu
-    Add-PSSnapin -Name VeeamPSSnapIn
-
-    #Ueberpruefung, ob es bei dem Jobname um ein Backup & Replication Objekt handelt.
-    if (Get-VBRJob -Name $strVeeamBackupJobName  -ErrorAction SilentlyContinue) {
-
-        # Auslesen des letzten Ausfuehrungsergebnis vom dem angegebenen Veeam Backup Job
-        $strVeeamBackupJobId = Get-VBRJob -Name $strVeeamBackupJobName | Select -ExpandProperty Id
-        $obVBRSession = Get-VBRBackupSession | Where-Object { $_.JobId -eq $strVeeamBackupJobId } | Sort -Descending -Property "CreationTime" | Select -First 1
-    }
+    [array] $aVBRSession=@()
+    [string] $strErrorMessage = $null
+    [string] $strTrace = $null
     
+
+    ### Fuege das Veeam Powershell SnapIn zu aktuellen Sitzung hinzu
+    try {
+        Add-PSSnapin -Name "VeeamPSSnapIn" -ErrorAction Stop
+    }
+    catch {
+        $strErrorMessage = $_.Exception.Message
+
+        $objReturnData = "" | Select-Object -Property strErrorMessage, strTrace
+        $objReturnData.strErrorMessage = $strErrorMessage
+        $objReturnData.strTrace = $strTrace
+        
+        return $objReturnData
+    }
+
+    ### Ueberpruefung, ob es bei dem Jobname um ein Computer Backup Objekt handelt.
+    if (Get-VBRComputerBackupJob -Name $strVeeamBackupJobName  -ErrorAction SilentlyContinue) {
+
+        ### Auslesen des letzten Ausfuehrungsergebnis vom dem angegebenen Veeam Backup Job
+        $strVeeamBackupJobId = Get-VBRComputerBackupJob -Name $strVeeamBackupJobName | Select -ExpandProperty Id
+        
+        $aVBRSession = Get-VBRComputerBackupJobSession
+        $obVBRSession = $aVBRSession | Where-Object { $_.JobId -eq $strVeeamBackupJobId } | Sort -Descending -Property "CreationTime" | Select -First 1
+    }
+
     # Ueberpruefung, ob es bei dem Jobname um ein Backup & Replication Entpoint Objekt handelt.
     elseif (Get-VBREPJob -Name $strVeeamBackupJobName -ErrorAction SilentlyContinue) {
         $strVeeamBackupJobId = Get-VBREPJob -Name $strVeeamBackupJobName | Select -ExpandProperty Id
         $obVBRSession = Get-VBREPSession | Where-Object { $_.JobId -eq $strVeeamBackupJobId } | Sort -Descending -Property "CreationTime" | Select -First 1
     }
 
-    #
+    ### Ueberpruefung, ob es bei dem Jobname um ein Backup & Replication Objekt handelt.
+    elseif (Get-VBRJob -Name $strVeeamBackupJobName  -ErrorAction SilentlyContinue) {
+
+        ### Auslesen des letzten Ausfuehrungsergebnis vom dem angegebenen Veeam Backup Job
+        $strVeeamBackupJobId = Get-VBRJob -Name $strVeeamBackupJobName | Select -ExpandProperty Id
+        $obVBRSession = Get-VBRBackupSession | Where-Object { $_.JobId -eq $strVeeamBackupJobId } | Sort -Descending -Property "CreationTime" | Select -First 1
+    }
+    
+    ### If no previous condition matched
+    else {
+        $strErrorMessage = "Keinen Veeam Job mit dem Namen `"$strVeeamBackupJobName`" gefunden!"
+
+        $objReturnData = "" | Select-Object -Property strErrorMessage, strTrace
+        $objReturnData.strErrorMessage = $strErrorMessage
+        $objReturnData.strTrace = $strTrace
+        
+        return $objReturnData
+    }
+
+    ###
     return $obVBRSession
 }
 
-#
-switch ($QueryResult.Result) {            
+
+### If an error occurred set prtg sensor to error state
+### Else no error occurred the return values will be processed
+If($objQueryResult.strErrorMessage) {
+    Set-PrtgError $objQueryResult.strErrorMessage
+}
+else {
+   
+    ###
+    switch ($objQueryResult.Result) {            
             
-    "Success" { $intVeeamBackupJobResult = 0 }
-    "None"    { $intVeeamBackupJobResult = 0 }
+        "Success" { $intVeeamBackupJobResult = 0 }
+        "Warning" { $intVeeamBackupJobResult = 1 }
+        "Failed"  { $intVeeamBackupJobResult = 2 }
 
-    "WARNING" { $intVeeamBackupJobResult = 1 }
-    
-    "Failed"  { $intVeeamBackupJobResult = 2 }
+        "None"    { $intVeeamBackupJobResult = 0 }
+        Default   { $intVeeamBackupJobResult = 1 }           
+    } 
 
-    Default   { $intVeeamBackupJobResult = 1 }           
-} 
+    ### Metadata des Veeam Backup Jobs in eine Variable einlesen
+    [xml] $xmlVeeamBackupJobAuxDetails = $objQueryResult.AuxData
 
-# Metadata des Veeam Backup Jobs in eine Variable einlesen
-[xml] $xmlVeeamBackupJobAuxDetails = $QueryResult.AuxData
+    ### Generate PRTG Output
+    $xmlOutput = "<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>`n"
+    $xmlOutput += "<prtg>`n"
 
-### Generate PRTG Output
-$xmlOutput = "<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>`n"
-$xmlOutput += "<prtg>`n"
+    $xmlOutput += Set-PrtgResult -Channel "Job Result" -Value $intVeeamBackupJobResult -Unit Count -ShowChart -WarnMsg "Job wurde mit Warnungen ausgefuehrt." -ErrorMsg "Job wurde mit Fehler ausgefuehrt." -MaxWarn 0 -MaxError 1
 
-$xmlOutput += Set-PrtgResult -Channel "Job Result" -Value $intVeeamBackupJobResult -Unit Count -ShowChart -WarnMsg "Job wurde mit Warnungen ausgefuehrt." -ErrorMsg "Job wurde mit Fehler ausgefuehrt." -MaxWarn 0 -MaxError 1
+    if ($objQueryResult.EndTime -and $objQueryResult.CreationTime) {
+    $xmlOutput += Set-PrtgResult -Channel "LaufzeitHour" -Value $( ($objQueryResult.EndTime - $objQueryResult.CreationTime).Hours)  -CustomUnit "Std." -ShowChart
+    $xmlOutput += Set-PrtgResult -Channel "LaufzeitMinutes" -Value $( ($objQueryResult.EndTime - $objQueryResult.CreationTime).Minutes)  -CustomUnit "Min." -ShowChart
+    $xmlOutput += Set-PrtgResult -Channel "LaufzeitSeconds" -Value $( ($objQueryResult.EndTime - $objQueryResult.CreationTime).Seconds)  -CustomUnit "Sek." -ShowChart
+    }
+    if ($xmlVeeamBackupJobAuxDetails.AuxData.CBackupstats.BackupSize) {
+        $xmlOutput += Set-PrtgResult -Channel "Job BackupSize" -Value ($xmlVeeamBackupJobAuxDetails.AuxData.CBackupstats.BackupSize) -VolumeSize GigaByte -ShowChart
+    }
+    if ($xmlVeeamBackupJobAuxDetails.AuxData.CBackupstats.DataSize) {
+        $xmlOutput += Set-PrtgResult -Channel "Job DataSize" -Value ($xmlVeeamBackupJobAuxDetails.AuxData.CBackupstats.DataSize) -VolumeSize GigaByte -ShowChart
+    }
+    if ($xmlVeeamBackupJobAuxDetails.AuxData.CBackupstats.DedupRatio) {
+        $xmlOutput += Set-PrtgResult -Channel "Job DedupRatio" -Value ($xmlVeeamBackupJobAuxDetails.AuxData.CBackupstats.DedupRatio) -ShowChart
+    }
+    if ($xmlVeeamBackupJobAuxDetails.AuxData.CBackupstats.CompressRatio) {
+    $xmlOutput += Set-PrtgResult -Channel "Job CompressRatio" -Value ($xmlVeeamBackupJobAuxDetails.AuxData.CBackupstats.CompressRatio) -ShowChart
+    }
+    if ($objQueryResult.CreationTime) {
+        $xmlOutput += "`t<text>Start: "+ $(get-date $objQueryResult.CreationTime -Format "dd.MM.yyyy HH:mm:ss") +", Ende: "+ $(get-date $objQueryResult.EndTime -Format "dd.MM.yyyy HH:mm:ss") +"</text>`n"
+    }
+    else {
+        $xmlOutput += "`t<text>Job ist bisher nicht gelaufen.</text>`n"
+    }
+    $xmlOutput += "</prtg>"
 
-if ($QueryResult.EndTime -and $QueryResult.CreationTime) {
-$xmlOutput += Set-PrtgResult -Channel "LaufzeitHour" -Value $( ($QueryResult.EndTime - $QueryResult.CreationTime).Hours)  -CustomUnit "Std." -ShowChart
-$xmlOutput += Set-PrtgResult -Channel "LaufzeitMinutes" -Value $( ($QueryResult.EndTime - $QueryResult.CreationTime).Minutes)  -CustomUnit "Min." -ShowChart
-$xmlOutput += Set-PrtgResult -Channel "LaufzeitSeconds" -Value $( ($QueryResult.EndTime - $QueryResult.CreationTime).Seconds)  -CustomUnit "Sek." -ShowChart
+    ### Return Xml
+    $xmlOutput
 }
-if ($xmlVeeamBackupJobAuxDetails.AuxData.CBackupstats.BackupSize) {
-    $xmlOutput += Set-PrtgResult -Channel "Job BackupSize" -Value ($xmlVeeamBackupJobAuxDetails.AuxData.CBackupstats.BackupSize) -VolumeSize GigaByte -ShowChart
-}
-if ($xmlVeeamBackupJobAuxDetails.AuxData.CBackupstats.DataSize) {
-    $xmlOutput += Set-PrtgResult -Channel "Job DataSize" -Value ($xmlVeeamBackupJobAuxDetails.AuxData.CBackupstats.DataSize) -VolumeSize GigaByte -ShowChart
-}
-if ($xmlVeeamBackupJobAuxDetails.AuxData.CBackupstats.DedupRatio) {
-    $xmlOutput += Set-PrtgResult -Channel "Job DedupRatio" -Value ($xmlVeeamBackupJobAuxDetails.AuxData.CBackupstats.DedupRatio) -ShowChart
-}
-if ($xmlVeeamBackupJobAuxDetails.AuxData.CBackupstats.CompressRatio) {
-$xmlOutput += Set-PrtgResult -Channel "Job CompressRatio" -Value ($xmlVeeamBackupJobAuxDetails.AuxData.CBackupstats.CompressRatio) -ShowChart
-}
-
-$xmlOutput += "`t<text>Start: "+ $(get-date $QueryResult.CreationTime -Format "dd.MM.yyyy HH:mm:ss") +", Ende: "+ $(get-date $QueryResult.EndTime -Format "dd.MM.yyyy HH:mm:ss") +"</text>`n"
-$xmlOutput += "</prtg>"
-
-# Return Xml
-$xmlOutput
