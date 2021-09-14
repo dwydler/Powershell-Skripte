@@ -37,6 +37,7 @@ Date                   Comment
 10.03.2019, 10:35 Uhr  remove serial from demo pc
 15.09.2019, 15:35 Uhr  Fujtisu change the query function
 09.12.2019, 14:21 Uhr  Implement export to excel/csv
+14.09.2021, 22:34 Uhr  Fixed query the adler database
 
 
 .COMPONENT
@@ -251,7 +252,7 @@ ForEach ($sn in $aSerialNumbers) {
         Write-Log -LogText "Gültige Seriennummer '$sn' erkannt." -LogStatus Success -Absatz
 
         Write-Log -LogText "Abfrage der Daten des Geräts bei Fujitsu." -LogStatus Info
-        $wroSearchHtml= Invoke-WebRequest "https://support.ts.fujitsu.com/Adler/Default.aspx?Lng=de&GotoDiv=Warranty/WarrantyStatus&DivID=indexwarranty&GotoUrl=IndexWarranty&Ident=$sn"
+        $wroSearchHtml= Invoke-WebRequest "https://support.ts.fujitsu.com/Adler/Default.aspx?Lng=de&GotoDiv=Warranty/WarrantyStatus&DivID=indexwarranty&GotoUrl=IndexWarranty&Ident=$sn&Token=`$x`$l`$O`$c`$s`$F`$K`$j`$`[`$n"
 
         [array] $arrFujitsuDeviceWarrentyInfos = $wroSearchHtml.InputFields | Where-Object { ($_.name -eq "Ident") -or ($_.name -eq "Product") -or ($_.name -eq "Firstuse") -or ($_.name -eq "WarrantyEndDate")  -or ($_.name -eq "WCode") `
             -or ($_.name -eq "WCodeDesc") -or ($_.name -eq "PartNumber") -or ($_.name -eq "WGR") -or ($_.name -eq "SOG") } | Select-Object Name, Value
