@@ -43,17 +43,11 @@ https://github.com/dwydler/Powershell-Skripte/blob/master/Fujitsu/fujtisu-suppor
 #---------------------------------------------------------[Initialisations]--------------------------------------------------------
 
 param(
-    [Parameter(
-        Position=0,
-        Mandatory=$false
-    )] 
+    [Parameter(Position=0)] 
     [ValidateNotNullOrEmpty()]
     [string] $SerialNumber = "",
 
-    [Parameter(
-        Position=1,
-        Mandatory=$false
-    )] 
+    [Parameter()] 
     [ValidateNotNullOrEmpty()]
     [switch] $csv
 )
@@ -83,10 +77,7 @@ Clear-Host
 
 function WorkingDir {
     param (
-         [parameter(
-            Mandatory=$false,
-            Position=0
-          )]
+        [parameter(Position=0)]
         [switch] $Debugging
     )
 
@@ -106,21 +97,19 @@ function WorkingDir {
 function Write-Log {
     [CmdletBinding()]
     param (
-        [Parameter(
-            Mandatory=$true,
-            Position=0)]
+        [Parameter(Mandatory, Position=0)]
         [ValidateNotNullOrEmpty()]
         [string] $LogText = "",
 
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
         [ValidateNotNullOrEmpty()]
         [ValidateSet('Info','Success','Warning','Error')]
         [string] $LogStatus= "Info",
 
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
         [switch] $Absatz,
 
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
         [switch] $EventLog
     )
 
