@@ -216,7 +216,7 @@ else {
 # Seriennummern von einem String in ein Array konvertieren
 $aSerialNumbers = $SerialNumber -split ';'
 
-# Falls der Schalter "csv" angeben ist, wird die Datei angelegt.
+# Falls der Parameter "csv" angegeben wurde, wird die CSV Datei angelegt.
 if ($csv) {
     Add-Content -Path "$strCsvFile"  -Value '"Seriennummer", "Produktname","Bestellnummer","Garantie Gruppe","Service Offer Gruppe","Service Code","Service Start","Service Ende","Service Status","Garantie Typ"' -Encoding UTF8
 }
@@ -253,6 +253,7 @@ ForEach ($sn in $aSerialNumbers) {
         }
         Write-Log -LogText "`tGarantie Typ:`t`t`t$($arrFujitsuDeviceWarrentyInfos[5].value)" -LogStatus Info -Absatz
 
+        # Falls der Parameter "csv" angegeben wurde, wird der jeweilige Datenssatz hinzugefügt.
         if ($csv) {
             Write-Log -LogText "`Schreibe die Daten in die CSV Datei '$strCsvFileName'." -LogStatus Info -Absatz
             Add-Content -Path "$strCsvFile" -Value "`"$($arrFujitsuDeviceWarrentyInfos[0].value)`",`"$($arrFujitsuDeviceWarrentyInfos[1].value)`",`"$($arrFujitsuDeviceWarrentyInfos[8].value)`",`"$($arrFujitsuDeviceWarrentyInfos[6].value)`",`"$($arrFujitsuDeviceWarrentyInfos[7].value)`",`"$($arrFujitsuDeviceWarrentyInfos[2].value)`",`"$(Get-Date $arrFujitsuDeviceWarrentyInfos[3].value -Format "dd.MM.yyyy")`",`"$(Get-Date $arrFujitsuDeviceWarrentyInfos[4].value -Format "dd.MM.yyyy")`",`"$strSeviceStatus`",`"$($arrFujitsuDeviceWarrentyInfos[5].value.Trim())`"" -Encoding UTF8
