@@ -16,6 +16,9 @@ Angabe der Seriennummer des Geräts, welches abgefragt werden soll
 .PARAMETER csv
 Ausgabe der Gerätedaten in eine CSV Datei
 
+.PARAMETER Interactive
+Skript wird am Ende nicht automatisch beendet
+
  
 .INPUTS
 Die Seriennummer des Geräts
@@ -36,7 +39,7 @@ https://github.com/dwydler/Powershell-Skripte/blob/master/Fujitsu/fujtisu-suppor
 
 .EXAMPLE
 .\fujtisu-support_check-warranty-status -SerialNumber "YM5G017837"
-.\fujtisu-support_check-warranty-status -SerialNumber "YM5G017837;YLPW019174"
+.\fujtisu-support_check-warranty-status -SerialNumber "YM5G017837" -Interactive
 .\fujtisu-support_check-warranty-status -SerialNumber "YM5G017837;YLPW019174" -csv
 #>
 
