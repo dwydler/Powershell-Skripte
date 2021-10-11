@@ -68,7 +68,7 @@ Clear-Host
 [string] $strLogfile = $strLogfilePath + "\" + $strLogfileName
 
 
-###
+### Variables for this script 
 [array] $aSerialNumbers = @()
 
 [string] $strCsvFilePath = $(pwd).Path
@@ -76,6 +76,11 @@ Clear-Host
 [string] $strCsvFileNamePrefix = "Export_"
 [string] $strCsvFileName = $($strCsvFileNamePrefix + $strCsvFileDate + ".csv")
 [string] $strCsvFile = $strCsvFilePath + "\" + $strCsvFileName
+
+[hashtable] $htFtsHeaders = @{
+    Origin = 'https://support.ts.fujitsu.com'
+    Referer = 'https://support.ts.fujitsu.com/IndexWarranty.asp?lng=de'
+}
 
 #-----------------------------------------------------------[Functions]------------------------------------------------------------
 
@@ -210,33 +215,46 @@ if ($SerialNumber -eq "") {
     Write-Log -LogText "Keine Seriennummern gefünden." -LogStatus Info -Absatz
 
     do {
-        $SerialNumber = Read-Host "Bitte Seriennummer(n) eingebenn (z.B. YLPW019174;YLPW019175)"
+        $SerialNumber = Read-Host "Bitte Seriennummer(n) eingebenn (z.B. YLPW019174;DSET073915)"
     } while ($SerialNumber -eq "")    
 }
 else {
     Write-Log -LogText "Mindestens eine Serienummer gefunden." -LogStatus Info -Absatz
 }
 
+
 # Seriennummern von einem String in ein Array konvertieren
 $aSerialNumbers = $SerialNumber -split ';'
+
 
 # Falls der Parameter "csv" angegeben wurde, wird die CSV Datei angelegt.
 if ($csv) {
     Add-Content -Path "$strCsvFile"  -Value '"Seriennummer", "Produktname","Bestellnummer","Garantie Gruppe","Service Offer Gruppe","Service Code","Service Start","Service Ende","Service Status","Garantie Typ"' -Encoding UTF8
 }
- 
+
+
 ForEach ($sn in $aSerialNumbers) {
 
     Write-Log -LogText "Überprüfen des Muster/Länger der Seriennummer '$sn'." -LogStatus Info
     if (ValidSerialNumber $sn ) {
         Write-Log -LogText "Gültige Seriennummer '$sn' erkannt." -LogStatus Success -Absatz
 
-        Write-Log -LogText "Abfrage der Daten des Geräts bei Fujitsu." -LogStatus Info
-        $wroSearchHtml= Invoke-WebRequest "https://support.ts.fujitsu.com/Adler/Default.aspx?Lng=de&GotoDiv=Warranty/WarrantyStatus&DivID=indexwarranty&GotoUrl=IndexWarranty&Ident=$sn&Token=`$x`$l`$O`$c`$s`$F`$K`$j`$`[`$n"
 
+        Write-Log -LogText "Aktuellen Token der Webseite auslesen" -LogStatus Info
+        $wroSearchHtml = Invoke-WebRequest -Method Get -Uri "https://support.ts.fujitsu.com/IndexWarranty.asp?lng=de"
+        [string] $strFtsWebsiteToken = (($wroSearchHtml.tostring() -split "[`r`n]" | Select-String "Token" | Select -First 1) -split ":")[1].Trim() -replace "'", ""
+
+
+        Write-Log -LogText "Abfrage der Daten des Geräts bei Fujitsu." -LogStatus Info
+        $wroSearchHtml = Invoke-WebRequest -Method Post -Headers $htFtsHeaders -Uri "https://support.ts.fujitsu.com/ProductCheck/Default.aspx" `
+                            -Body "lng=de&GotoDiv=Warranty/FWarrantyStatus&DivID=indexwarranty&GotoUrl=IndexWarranty&RegionID=1&Ident=$sn&Token=$strFtsWebsiteToken"
+
+        
+        Write-Log -LogText "Erhaltene Daten filtern und speichern." -LogStatus Info
         [array] $arrFujitsuDeviceWarrentyInfos = $wroSearchHtml.InputFields | Where-Object { ($_.name -eq "Ident") -or ($_.name -eq "Product") -or ($_.name -eq "Firstuse") -or ($_.name -eq "WarrantyEndDate")  -or ($_.name -eq "WCode") `
             -or ($_.name -eq "WCodeDesc") -or ($_.name -eq "PartNumber") -or ($_.name -eq "WGR") -or ($_.name -eq "SOG") } | Select-Object Name, Value
         
+
         Write-Log -LogText "`tSeriennummer:`t`t`t$($arrFujitsuDeviceWarrentyInfos[0].value)" -LogStatus Info 
         Write-Log -LogText "`tProduktname:`t`t`tFujitsu $($arrFujitsuDeviceWarrentyInfos[1].value)" -LogStatus Info 
         Write-Log -LogText "`tBestellnummer:`t`t`t$($arrFujitsuDeviceWarrentyInfos[8].value)" -LogStatus Info
@@ -247,15 +265,16 @@ ForEach ($sn in $aSerialNumbers) {
 
         if( (Get-Date $arrFujitsuDeviceWarrentyInfos[4].value) -gt (Get-Date)) {
             Write-Log -LogText "`tService Ende:`t`t`t$(Get-Date $arrFujitsuDeviceWarrentyInfos[4].value -Format "dd.MM.yyyy")" -LogStatus Success
-            Write-Log -LogText "`tService Status:`t`tDas Produkt ist unter Service." -LogStatus Success
+            Write-Log -LogText "`tService Status:`t`t`tDas Produkt ist unter Support." -LogStatus Success
             [string] $strSeviceStatus = "Das Produkt ist unter Service."
         }
         else {
             Write-Log -LogText "`tService Ende:`t`t`t$(Get-Date $arrFujitsuDeviceWarrentyInfos[4].value -Format "dd.MM.yyyy")" -LogStatus Error
-            Write-Log -LogText "`tService Status:`t`t`tDas Produkt hat keinen Service mehr." -LogStatus Error
+            Write-Log -LogText "`tService Status:`t`t`tDas Produkt hat keinen Support mehr." -LogStatus Error
             [string] $strSeviceStatus = "Das Produkt hat keinen Service mehr."
         }
         Write-Log -LogText "`tGarantie Typ:`t`t`t$($arrFujitsuDeviceWarrentyInfos[5].value)" -LogStatus Info -Absatz
+
 
         # Falls der Parameter "csv" angegeben wurde, wird der jeweilige Datenssatz hinzugefügt.
         if ($csv) {
@@ -267,6 +286,7 @@ ForEach ($sn in $aSerialNumbers) {
         Write-Log -LogText "Die Seriennummer '$sn' ist ungültig!" -LogStatus Error
     }
 }
+
 
 # Falls der Parameter "interactive" angegeben wurde, wird das Skript am Ende pausiert.
 if ($interactive) {
