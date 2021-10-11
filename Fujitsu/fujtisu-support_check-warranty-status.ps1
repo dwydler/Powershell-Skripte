@@ -25,7 +25,6 @@ Ausgabe der Garantieinformationen des Geräts
  
 .NOTES
 File:           fujtisu-support_check-warranty-status
-Version:        0.5
 Author:         Daniel Wydler
 Creation Date:  10.03.2019, 10:32 Uhr
 Purpose/Change:
@@ -220,7 +219,6 @@ Write-Host @"
 ------------------------------------------------------------------------------------------------------------------------
 
                                         Fujitsu Garantie / Service Status ueberpruefen
-                                                        Version: 0.5
 
 ------------------------------------------------------------------------------------------------------------------------
 "@
