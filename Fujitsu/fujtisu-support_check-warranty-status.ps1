@@ -27,17 +27,6 @@ Ausgabe der Garantieinformationen des Geräts
 File:           fujtisu-support_check-warranty-status
 Author:         Daniel Wydler
 Creation Date:  10.03.2019, 10:32 Uhr
-Purpose/Change:
- 
-Date                   Comment
------------------------------------------------
-10.03.2019, 10:32 Uhr  Initial community release
-10.03.2019, 10:34 Uhr  Fujtisu change the query function
-10.03.2019, 10:35 Uhr  remove serial from demo pc
-15.09.2019, 15:35 Uhr  Fujtisu change the query function
-09.12.2019, 14:21 Uhr  Implement export to excel/csv
-14.09.2021, 22:34 Uhr  Fixed query the adler database
-
 
 .COMPONENT
 None
