@@ -229,7 +229,7 @@ $aSerialNumbers = $SerialNumber -split ';'
 
 # Falls der Parameter "csv" angegeben wurde, wird die CSV Datei angelegt.
 if ($csv) {
-    Add-Content -Path "$strCsvFile"  -Value '"Seriennummer", "Produktname","Bestellnummer","Garantie Gruppe","Service Offer Gruppe","Service Code","Service Start","Service Ende","Service Status","Garantie Typ"' -Encoding UTF8
+    Add-Content -Path "$strCsvFile"  -Value '"Seriennummer";"Produkt";"AdlerProdukt";"AdlerProduktFamilie";"Support Code";"Support Start";"Support Ende";"Produkt Support Ende";"Support Details";"Garantie Gruppe";"Support Offering Gruppe";"Bestellnummer"' -Encoding UTF8
 }
 
 
@@ -251,35 +251,41 @@ ForEach ($sn in $aSerialNumbers) {
 
         
         Write-Log -LogText "Erhaltene Daten filtern und speichern." -LogStatus Info
-        [array] $arrFujitsuDeviceWarrentyInfos = $wroSearchHtml.InputFields | Where-Object { ($_.name -eq "Ident") -or ($_.name -eq "Product") -or ($_.name -eq "Firstuse") -or ($_.name -eq "WarrantyEndDate")  -or ($_.name -eq "WCode") `
-            -or ($_.name -eq "WCodeDesc") -or ($_.name -eq "PartNumber") -or ($_.name -eq "WGR") -or ($_.name -eq "SOG") } | Select-Object Name, Value
+        [array] $arrFujitsuDeviceWarrentyInfos = $wroSearchHtml.InputFields | Where-Object { ($_.name -eq "Ident") -or ($_.name -eq "Product") -or ($_.name -eq "AdlerProduct") -or ($_.name -eq "AdlerProductFam") -or ($_.name -eq "MS90") `
+            -or ($_.name -eq "Firstuse") -or ($_.name -eq "WarrantyEndDate")  -or ($_.name -eq "WCode") -or ($_.name -eq "WCodeDesc") -or ($_.name -eq "PartNumber") -or ($_.name -eq "WGR") -or ($_.name -eq "SOG") } | Select-Object Name, Value
         
 
-        Write-Log -LogText "`tSeriennummer:`t`t`t$($arrFujitsuDeviceWarrentyInfos[0].value)" -LogStatus Info 
-        Write-Log -LogText "`tProduktname:`t`t`tFujitsu $($arrFujitsuDeviceWarrentyInfos[1].value)" -LogStatus Info 
-        Write-Log -LogText "`tBestellnummer:`t`t`t$($arrFujitsuDeviceWarrentyInfos[8].value)" -LogStatus Info
-        Write-Log -LogText "`tGarantie Gruppe:`t`t$($arrFujitsuDeviceWarrentyInfos[6].value)" -LogStatus Info
-        Write-Log -LogText "`tService Offer Gruppe:`t$($arrFujitsuDeviceWarrentyInfos[7].value)" -LogStatus Info
-        Write-Log -LogText "`tService Code:`t`t`t$($arrFujitsuDeviceWarrentyInfos[2].value)" -LogStatus Info
-        Write-Log -LogText "`tService Start:`t`t`t$(Get-Date $arrFujitsuDeviceWarrentyInfos[3].value -Format "dd.MM.yyyy")" -LogStatus Info
+        # Ausgabe der Daten
+        Write-Log -LogText "`tSeriennummer:`t`t`t$($arrFujitsuDeviceWarrentyInfos[0].value)" -LogStatus Info
+        Write-Log -LogText "`tProdukt:`t`t`t`tFujitsu $($arrFujitsuDeviceWarrentyInfos[1].value)" -LogStatus Info
+        Write-Log -LogText "`tAdlerProdukt:`t`t`tFujitsu $($arrFujitsuDeviceWarrentyInfos[2].value)" -LogStatus Info
+        Write-Log -LogText "`tAdlerProduktFamilie:`tFujitsu $($arrFujitsuDeviceWarrentyInfos[3].value)" -LogStatus Info
+        Write-Log -LogText "`tSupport Code:`t`t`t$($arrFujitsuDeviceWarrentyInfos[4].value)" -LogStatus Info
 
-        if( (Get-Date $arrFujitsuDeviceWarrentyInfos[4].value) -gt (Get-Date)) {
-            Write-Log -LogText "`tService Ende:`t`t`t$(Get-Date $arrFujitsuDeviceWarrentyInfos[4].value -Format "dd.MM.yyyy")" -LogStatus Success
-            Write-Log -LogText "`tService Status:`t`t`tDas Produkt ist unter Support." -LogStatus Success
+        Write-Log -LogText "`tSupport Start:`t`t`t$(Get-Date $arrFujitsuDeviceWarrentyInfos[5].value -Format "dd.MM.yyyy")" -LogStatus Info
+
+        if( (Get-Date $arrFujitsuDeviceWarrentyInfos[7].value) -gt (Get-Date)) {
+            Write-Log -LogText "`tSupport Ende:`t`t`t$(Get-Date $arrFujitsuDeviceWarrentyInfos[7].value -Format "dd.MM.yyyy")" -LogStatus Success
+            Write-Log -LogText "`tSupport Status:`t`t`tDas Produkt ist unter Support." -LogStatus Success
             [string] $strSeviceStatus = "Das Produkt ist unter Service."
         }
         else {
-            Write-Log -LogText "`tService Ende:`t`t`t$(Get-Date $arrFujitsuDeviceWarrentyInfos[4].value -Format "dd.MM.yyyy")" -LogStatus Error
-            Write-Log -LogText "`tService Status:`t`t`tDas Produkt hat keinen Support mehr." -LogStatus Error
+            Write-Log -LogText "`tSupport Ende:`t`t`t$(Get-Date $arrFujitsuDeviceWarrentyInfos[7].value -Format "dd.MM.yyyy")" -LogStatus Error
+            Write-Log -LogText "`tSupport Status:`t`t`tDas Produkt hat keinen Support mehr." -LogStatus Error
             [string] $strSeviceStatus = "Das Produkt hat keinen Service mehr."
         }
-        Write-Log -LogText "`tGarantie Typ:`t`t`t$($arrFujitsuDeviceWarrentyInfos[5].value)" -LogStatus Info -Absatz
+        
+        Write-Log -LogText "`tProdukt Support Ende:`t$([DateTime]::ParseExact($arrFujitsuDeviceWarrentyInfos[6].value, "M/dd/yyyy", $null).ToString("dd.MM.yyyy"))" -LogStatus Info
+        Write-Log -LogText "`tSupport Details:`t`t$($arrFujitsuDeviceWarrentyInfos[8].value)" -LogStatus Info
+        Write-Log -LogText "`tGarantie Gruppe:`t`t$($arrFujitsuDeviceWarrentyInfos[9].value)" -LogStatus Info
+        Write-Log -LogText "`tSupport Offering Gruppe:$($arrFujitsuDeviceWarrentyInfos[10].value)" -LogStatus Info
+        Write-Log -LogText "`tBestellnummer:`t`t`t$($arrFujitsuDeviceWarrentyInfos[11].value)" -LogStatus Info -Absatz
 
 
         # Falls der Parameter "csv" angegeben wurde, wird der jeweilige Datenssatz hinzugefügt.
         if ($csv) {
             Write-Log -LogText "`Schreibe die Daten in die CSV Datei '$strCsvFileName'." -LogStatus Info -Absatz
-            Add-Content -Path "$strCsvFile" -Value "`"$($arrFujitsuDeviceWarrentyInfos[0].value)`",`"$($arrFujitsuDeviceWarrentyInfos[1].value)`",`"$($arrFujitsuDeviceWarrentyInfos[8].value)`",`"$($arrFujitsuDeviceWarrentyInfos[6].value)`",`"$($arrFujitsuDeviceWarrentyInfos[7].value)`",`"$($arrFujitsuDeviceWarrentyInfos[2].value)`",`"$(Get-Date $arrFujitsuDeviceWarrentyInfos[3].value -Format "dd.MM.yyyy")`",`"$(Get-Date $arrFujitsuDeviceWarrentyInfos[4].value -Format "dd.MM.yyyy")`",`"$strSeviceStatus`",`"$($arrFujitsuDeviceWarrentyInfos[5].value.Trim())`"" -Encoding UTF8
+            Add-Content -Path "$strCsvFile" -Value "`"$($arrFujitsuDeviceWarrentyInfos[0].value)`";`"$($arrFujitsuDeviceWarrentyInfos[1].value)`";`"$($arrFujitsuDeviceWarrentyInfos[2].value)`";`"$($arrFujitsuDeviceWarrentyInfos[3].value)`";`"$($arrFujitsuDeviceWarrentyInfos[4].value)`";`"$(Get-Date $arrFujitsuDeviceWarrentyInfos[5].value -Format "dd.MM.yyyy")`";`"$(Get-Date $arrFujitsuDeviceWarrentyInfos[7].value -Format "dd.MM.yyyy")`";`"$([DateTime]::ParseExact($arrFujitsuDeviceWarrentyInfos[6].value, "M/dd/yyyy", $null).ToString("dd.MM.yyyy"))`";`"$($arrFujitsuDeviceWarrentyInfos[8].value)`";`"$($arrFujitsuDeviceWarrentyInfos[9].value)`";`"$($arrFujitsuDeviceWarrentyInfos[10].value)`";`"$($arrFujitsuDeviceWarrentyInfos[11].value)`"" -Encoding UTF8
         }
     }
     else {
