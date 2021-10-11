@@ -49,7 +49,11 @@ param(
 
     [Parameter()] 
     [ValidateNotNullOrEmpty()]
-    [switch] $csv
+    [switch] $csv,
+
+    [Parameter()] 
+    [ValidateNotNullOrEmpty()]
+    [switch] $Interactive
 )
 
 Clear-Host
@@ -262,7 +266,11 @@ ForEach ($sn in $aSerialNumbers) {
     else {
         Write-Log -LogText "Die Seriennummer '$sn' ist ungültig!" -LogStatus Error
     }
+}
 
+# Falls der Parameter "interactive" angegeben wurde, wird das Skript am Ende pausiert.
+if ($interactive) {
+    pause
 }
 
 exit
