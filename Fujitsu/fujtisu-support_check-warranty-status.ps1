@@ -278,7 +278,7 @@ ForEach ($sn in $aSerialNumbers) {
             [string] $strSeviceStatus = "Das Produkt hat keinen Service mehr."
         }
         
-        Write-Log -LogText "`tProdukt Support Ende:`t$([DateTime]::ParseExact($arrFujitsuDeviceWarrentyInfos[6].value, "M/dd/yyyy", $null).ToString("dd.MM.yyyy"))" -LogStatus Info
+        Write-Log -LogText "`tProdukt Support Ende:`t$([DateTime]::ParseExact( ( ($arrFujitsuDeviceWarrentyInfos[6].value).TrimEnd(" *") ), "M/dd/yyyy", $null).ToString("dd.MM.yyyy"))" -LogStatus Info
         Write-Log -LogText "`tSupport Details:`t`t$($arrFujitsuDeviceWarrentyInfos[8].value)" -LogStatus Info
         Write-Log -LogText "`tGarantie Gruppe:`t`t$($arrFujitsuDeviceWarrentyInfos[9].value)" -LogStatus Info
         Write-Log -LogText "`tSupport Offering Gruppe:$($arrFujitsuDeviceWarrentyInfos[10].value)" -LogStatus Info
