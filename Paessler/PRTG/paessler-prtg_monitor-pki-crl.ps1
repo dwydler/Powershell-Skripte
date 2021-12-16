@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 PRTG Sensor script to monitor a certificate revocation list (CRL)
 
@@ -19,7 +19,7 @@ This script returns Xml for a custom PRTG sensor providing the following channel
 Name des Servers, auf dem der Sensor ausgeführt werden soll
 
 .PARAMETER CrlUrl
-Vollständige Adresse der CRL (z.B. http://x1.c.lencr.org/)
+Vollständige Adresse der CRL
 
 .INPUTS
 None
@@ -255,11 +255,11 @@ $CRLHexString = ($byCrlBytes | % {"{0:X2}" -f $_}) -join " "
 $xmlOutput = "<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes"" ?>`n"
 $xmlOutput += "<prtg>`n"
 
-$xmlOutput += Set-PrtgResult -Channel "CA Name" -Value $strCaName -Unit Custom
 $xmlOutput += Set-PrtgResult -Channel "Valid" -Value $bIsvalid -Unit Custom -ShowChart
 $xmlOutput += Set-PrtgResult -Channel "Created before" -Value $intCreatedForDays -Unit Days -ShowChart
 $xmlOutput += Set-PrtgResult -Channel "Expiration" -Value $intExpirationDays -Unit Days -ShowChart
 
+$xmlOutput += "<Text>CA Name: $strCaName</Text>" 
 $xmlOutput += '</prtg>'
 
 # Return Xml
