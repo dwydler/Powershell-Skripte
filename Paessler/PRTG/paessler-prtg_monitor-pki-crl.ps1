@@ -19,7 +19,7 @@ This script returns Xml for a custom PRTG sensor providing the following channel
 Name des Servers, auf dem der Sensor ausgeführt werden soll
 
 .PARAMETER CrlUrl
-Vollständige Adresse der CRL (z.B. http://r3.i.lencr.org/)
+Vollständige Adresse der CRL (z.B. http://x1.c.lencr.org/)
 
 .INPUTS
 None
@@ -48,7 +48,7 @@ http://powershellcoder.com/index.php/2016/10/08/get-crltimevalidity-part-1/
 https://github.com/dwydler/Powershell-Skripte/tree/master/Paessler/PRTG
 
 .EXAMPLE
-.\prtg_monitor-check-crl.ps1 "$PrtgDevice" "http://r3.i.lencr.org/"
+.\prtg_monitor-check-crl.ps1 "$PrtgDevice" "http://x1.c.lencr.org/"
 
 #>
 
