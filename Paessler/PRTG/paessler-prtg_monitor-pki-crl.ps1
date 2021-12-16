@@ -243,7 +243,7 @@ $CRLHexString = ($byCrlBytes | % {"{0:X2}" -f $_}) -join " "
 [DateTime] $dtThisUpdate = [Management.ManagementDateTimeConverter]::ToDateTime(("20" + $(($saThisUpdateBytes | %{[char]$_}) -join ""  -replace "z")) + ".000000+000") 
 [DateTime] $dtNextUpdate = [Management.ManagementDateTimeConverter]::ToDateTime(("20" + $(($saNextUpdateBytes | %{[char]$_}) -join ""  -replace "z")) + ".000000+000") 
                                                                                                                                                                 
-[bool]$bIsvalid = ($dtNextUpdate -gt (Get-Date) )
+[int]$intIsvalid = [int][bool]::Parse( ($dtNextUpdate -gt (Get-Date) ) )
 [int] $intCreatedForDays = [math]::truncate( ((Get-Date) - $dtThisUpdate ).TotalDays)
 [int] $intExpirationDays = [math]::truncate( ($dtNextUpdate - (Get-Date) ).TotalDays)
 
@@ -255,7 +255,7 @@ $CRLHexString = ($byCrlBytes | % {"{0:X2}" -f $_}) -join " "
 $xmlOutput = "<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes"" ?>`n"
 $xmlOutput += "<prtg>`n"
 
-$xmlOutput += Set-PrtgResult -Channel "Valid" -Value $bIsvalid -Unit Custom -ShowChart
+$xmlOutput += Set-PrtgResult -Channel "Valid" -Value $intIsvalid -Unit Custom -ShowChart -ValueLookup "prtg.standardlookups.boolean.statetrueok"
 $xmlOutput += Set-PrtgResult -Channel "Created before" -Value $intCreatedForDays -Unit Days -ShowChart
 $xmlOutput += Set-PrtgResult -Channel "Expiration" -Value $intExpirationDays -Unit Days -ShowChart
 
