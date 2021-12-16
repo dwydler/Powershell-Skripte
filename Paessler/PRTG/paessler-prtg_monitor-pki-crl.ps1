@@ -260,7 +260,7 @@ $xmlOutput += Set-PrtgResult -Channel "Created before" -Value $intCreatedForDays
 $xmlOutput += Set-PrtgResult -Channel "Expiration" -Value $intExpirationDays -Unit Days -ShowChart
 
 $xmlOutput += "<Text>CA Name: $strCaName</Text>" 
-$xmlOutput += '</prtg>'
+$xmlOutput += "</prtg>"
 
 # Return Xml
 $xmlOutput
