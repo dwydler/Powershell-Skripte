@@ -41,6 +41,7 @@ Date                   Comment
 27.03.2021, 20:22 Uhr  Fixed query for computer backup jobs
 28.03.2021, 18;44 Uhr  Fixed query for computer backup jobs
 28.03.2021, 18:54 Uhr  Fixed evaluation of job status
+06.01.2022, 16:33 Uhr  Changed Veeam PsSnapIn to Import-Module
 
 
 .COMPONENT
@@ -232,9 +233,9 @@ $objQueryResult = Invoke-command –ComputerName $PrtgDevice -Args $VeeamBRJobNa
     [string] $strTrace = $null
     
 
-    ### Fuege das Veeam Powershell SnapIn zu aktuellen Sitzung hinzu
+    ### Fuege das Veeam Powershell Module zu aktuellen Sitzung hinzu
     try {
-        Add-PSSnapin -Name "VeeamPSSnapIn" -ErrorAction Stop
+        Import-Module Veeam.Backup.PowerShell -ErrorAction Stop 
     }
     catch {
         $strErrorMessage = $_.Exception.Message
