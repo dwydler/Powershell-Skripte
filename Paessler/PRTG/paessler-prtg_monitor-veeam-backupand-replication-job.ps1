@@ -42,7 +42,8 @@ Date                   Comment
 28.03.2021, 18;44 Uhr  Fixed query for computer backup jobs
 28.03.2021, 18:54 Uhr  Fixed evaluation of job status
 06.01.2022, 16:33 Uhr  Changed Veeam PsSnapIn to Import-Module
-
+28.03.2022, 11:20 Uhr  Added Support for Tape Jobs
+28.03.2022, 11:21 Uhr  Fixed Dashes
 
 .COMPONENT
 Veeam Backup & Replication Powershell-Module
