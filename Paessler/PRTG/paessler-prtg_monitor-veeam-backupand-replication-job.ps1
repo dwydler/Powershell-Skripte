@@ -221,7 +221,7 @@ If (-not (Test-NetConnection $PrtgDevice -port 5985 -InformationLevel Quiet)) {
 
 
 ### The following commands will be executed on the remote computer
-$objQueryResult = Invoke-command –ComputerName $PrtgDevice -Args $VeeamBRJobName -ScriptBlock {
+$objQueryResult = Invoke-command -ComputerName $PrtgDevice -Args $VeeamBRJobName -ScriptBlock {
 
     ### Declarations
     param(
