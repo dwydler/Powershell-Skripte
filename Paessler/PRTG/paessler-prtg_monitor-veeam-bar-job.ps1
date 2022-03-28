@@ -21,7 +21,7 @@ None
 Output exit code and a description
  
 .NOTES
-File:           paessler-prtg_monitor-veeam-backupand-replication-job.ps1
+File:           paessler-prtg_monitor-veeam-bar-job.ps1
 Version:        1.3
 Author:         Daniel Wydler
 Creation Date:  10.03.2019, 10:54 Uhr
@@ -44,18 +44,19 @@ Date                   Comment
 06.01.2022, 16:33 Uhr  Changed Veeam PsSnapIn to Import-Module
 28.03.2022, 11:20 Uhr  Added Support for Tape Jobs (Thanks to offline4ever)
 28.03.2022, 11:21 Uhr  Fixed Dashes
+28.03.2022, 11:28 Uhr  Rename file name of the script
 
 .COMPONENT
 Veeam Backup & Replication Powershell-Module
 
 .LINK
 www.vmbaggum.nl/2015/03/monitor-veeam-backup-jobs-with-prtg/
-github.com/dwydler/Powershell-Skripte/blob/master/Paessler/PRTG/paessler-prtg_monitor-veeam-backupand-replication-job.ps1
+github.com/dwydler/Powershell-Skripte/blob/master/Paessler/PRTG/paessler-prtg_monitor-veeam-bar-job.ps1
 
 
 .EXAMPLE
-.\paessler-prtg_monitor-veeam-backupand-replication-job.ps1 -PrtgDevice "localhost" -VeeamBRJobName "Job1"
-.\paessler-prtg_monitor-veeam-backupand-replication-job.ps1 "localhost" "Job1"
+.\paessler-prtg_monitor-veeam-bar-job.ps1.ps1 -PrtgDevice "localhost" -VeeamBRJobName "Job1"
+.\paessler-prtg_monitor-veeam-bar-job.ps1.ps1 "localhost" "Job1"
 #>
 
 #---------------------------------------------------------[Initialisations]--------------------------------------------------------
