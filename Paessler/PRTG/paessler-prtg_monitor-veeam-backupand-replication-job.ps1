@@ -270,7 +270,16 @@ $objQueryResult = Invoke-command –ComputerName $PrtgDevice -Args $VeeamBRJobNa
         $strVeeamBackupJobId = Get-VBRJob -Name $strVeeamBackupJobName | Select -ExpandProperty Id
         $obVBRSession = Get-VBRBackupSession | Where-Object { $_.JobId -eq $strVeeamBackupJobId } | Sort -Descending -Property "CreationTime" | Select -First 1
     }
-    
+
+	### Ueberpruefung, ob es bei dem Jobname um ein Backup & Replication Tape Objekt handelt.
+	elseif (Get-VBRTapeJob -Name $strVeeamBackupJobName -ErrorAction SilentlyContinue) {
+
+		### Auslesen des letzten Ausfuehrungsergebnis vom dem angegebenen Veeam Backup Job
+		$strVeeamBackupJobId = Get-VBRTapeJob -Name $strVeeamBackupJobName | Select -ExpandProperty Id
+		#Get-VBRTapeBackup nicht mehr nutzen -> WARNUNG: This cmdlet is obsolete and no longer supported
+		#See: https://helpcenter.veeam.com/docs/backup/powershell/get-vbrtapebackup.html?ver=110
+		$obVBRSession = [veeam.backup.core.cbackupsession]::GetByJob($strVeeamBackupJobId) | Sort CreationTime -Descending | select -First 1
+	}
     ### If no previous condition matched
     else {
         $strErrorMessage = "Keinen Veeam Job mit dem Namen `"$strVeeamBackupJobName`" gefunden!"
@@ -282,8 +291,19 @@ $objQueryResult = Invoke-command –ComputerName $PrtgDevice -Args $VeeamBRJobNa
         return $objReturnData
     }
 
+	$obCustomReturn = New-Object -TypeName System.Object
+	$obCustomReturn | Add-Member -MemberType NoteProperty -Name "Result" -Value $obVBRSession.Result.ToString()
+	$obCustomReturn | Add-Member -MemberType NoteProperty -Name "AuxData" -Value $obVBRSession.AuxData
+	$obCustomReturn | Add-Member -MemberType NoteProperty -Name "CreationTime" -Value $obVBRSession.CreationTime
+	$obCustomReturn | Add-Member -MemberType NoteProperty -Name "EndTime" -Value $obVBRSession.EndTime
+	if ($obVBRSession.JobType -eq 'VmTapeBackup') {
+		$obCustomReturn | Add-Member -MemberType NoteProperty -Name "BackupSize" -Value $obVBRSession.SessionInfo.BackUpTotalSize
+	} elseif ($obVBRSession.JobType -eq 'Backup') {
+		$obCustomReturn | Add-Member -MemberType NoteProperty -Name "BackupSize" -Value $obVBRSession.SessionInfo.BackedUpSize
+	}
+	
     ###
-    return $obVBRSession
+    return $obCustomReturn
 }
 
 
@@ -319,8 +339,8 @@ else {
     $xmlOutput += Set-PrtgResult -Channel "LaufzeitMinutes" -Value $( ($objQueryResult.EndTime - $objQueryResult.CreationTime).Minutes)  -CustomUnit "Min." -ShowChart
     $xmlOutput += Set-PrtgResult -Channel "LaufzeitSeconds" -Value $( ($objQueryResult.EndTime - $objQueryResult.CreationTime).Seconds)  -CustomUnit "Sek." -ShowChart
     }
-    if ($xmlVeeamBackupJobAuxDetails.AuxData.CBackupstats.BackupSize) {
-        $xmlOutput += Set-PrtgResult -Channel "Job BackupSize" -Value ($xmlVeeamBackupJobAuxDetails.AuxData.CBackupstats.BackupSize) -VolumeSize GigaByte -ShowChart
+    if ($objQueryResult.BackupSize) {
+        $xmlOutput += Set-PrtgResult -Channel "Job BackupSize" -Value ($objQueryResult.BackupSize) -VolumeSize GigaByte -ShowChart -DecimalMode "Auto"
     }
     if ($xmlVeeamBackupJobAuxDetails.AuxData.CBackupstats.DataSize) {
         $xmlOutput += Set-PrtgResult -Channel "Job DataSize" -Value ($xmlVeeamBackupJobAuxDetails.AuxData.CBackupstats.DataSize) -VolumeSize GigaByte -ShowChart
