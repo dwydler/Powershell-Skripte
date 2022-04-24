@@ -9,20 +9,21 @@ RISK OF THE USE OR THE RESULTS FROM THE USE OF THIS CODE REMAINS WITH THE USER.
 .DESCRIPTION
 This script returns Xml for a custom PRTG sensor providing the following channels
 
-- In/Out Success             | Total of inbound/outbound successfully delivered messages over the last X minutes
+
 - Inbound Success            | Number of inbound successfully delivered messages over the last X minutes
 - Outbound Success           | Number of outbound successfully delivered messages over the last X minutes
 - Inbound PermanentlyBlocked | Number of inbound blocked messages over the last X minutes
 - Outbound DeliveryPending   | Number of outbound messages with pending delivery over the last X minutes
+- LargeFiles                 | Number of files on the large file server
+- Ablauf der NSP Lizenz      | Number of days till the nsp licenses expires
+- Probleme                   | Number of nsp issues
+- SSL Zertifate *            | Number of days till the tls certifcates of the connectors expires
 
 .PARAMETER PrtgDevice
 Name des Servers, auf dem die NoSpamProxy Intranet Rolle installiert ist.
 
 .PARAMETER intMinutes
 Dieser Parameter muss indentisch sein, mit dem Abfrage Interverall des PRTG Sensors, welcher dieses Skript ausführt.Angabe in Minuten!
-
-.PARAMETER NspGatewayRoleName
-Mit diesem Parameter kann explizit der Name der NoSpamProxy Gateway Rolle angegeben werden, die ausgewertet werden soll
 
 .INPUTS
 None
@@ -45,6 +46,7 @@ Date                   Comment
 17.09.2019, 17:01 Uhr  Rewrited codebase for query gateway role
 21.09.2019, 21:20 Uhr  Changed output in Set-PrtgError
 21.09.2019, 21:20 Uhr  Fixed variable name in Set-PrtgResult
+24.04.2022, 18:53 Uhr  Code base revised & added new querys
 
 
 The following parameters of the message tracking information are available
@@ -60,7 +62,6 @@ https://github.com/dwydler/Powershell-Skripte/tree/master/Paessler/PRTG
 
 .EXAMPLE
 .\paessler-prtg_monitor-netatwork-nospamproxy.ps1 "Computername" "Intervall des PRTG Sensors"
-.\paessler-prtg_monitor-netatwork-nospamproxy.ps1 "Computername" "Intervall des PRTG Sensors" "Name der NSP Gateway Rolle"
 #>
 
 #---------------------------------------------------------[Initialisations]--------------------------------------------------------
@@ -69,23 +70,16 @@ Param (
    [Parameter(
         ValueFromPipelineByPropertyName,
         Position=0,
-        Mandatory=$true
+        Mandatory=$false
     )]
    [string] $PrtgDevice,
 
    [Parameter(
         ValueFromPipelineByPropertyName,
         Position=1,
-        Mandatory=$true
-    )]
-   [int] $intMinutes,
-
-   [Parameter(
-        ValueFromPipelineByPropertyName,
-        Position=2,
         Mandatory=$false
     )]
-   [string] $NspGatewayRoleName
+   [int] $intMinutes
 )
 
 Clear-Host
@@ -100,6 +94,9 @@ Clear-Host
 [int] $intDeliveryPendingMaxWarn = 10
 
 [string] $strXmlOutput = ""
+
+# Datum und Uhrzeit zur Laufzeit des Skripts
+[datetime] $dtNow = Get-Date
 
 #-----------------------------------------------------------[Functions]------------------------------------------------------------
 
@@ -143,6 +140,10 @@ function Set-PrtgResult {
         [Parameter(mandatory=$False)]
         [alias('me')]
         [string]$MaxError,
+
+        [Parameter(mandatory=$False)]
+        [alias('mine')]
+        [string]$MinError,
     
         [Parameter(mandatory=$False)]
         [alias('wm')]
@@ -202,6 +203,7 @@ function Set-PrtgResult {
     if ($MaxWarn)            { $Result += "`t`t<limitmaxwarning>$MaxWarn</limitmaxwarning>`n"; $LimitMode = $true }
     if ($MinWarn)            { $Result += "`t`t<limitminwarning>$MinWarn</limitminwarning>`n"; $LimitMode = $true }
     if ($MaxError)           { $Result += "`t`t<limitmaxerror>$MaxError</limitmaxerror>`n"; $LimitMode = $true }
+    if ($MinError)           { $Result += "`t`t<limitminerror>$MinError</limitminerror>`n"; $LimitMode = $true }
     if ($WarnMsg)            { $Result += "`t`t<limitwarningmsg>$WarnMsg</limitwarningmsg>`n"; $LimitMode = $true }
     if ($ErrorMsg)           { $Result += "`t`t<limiterrormsg>$ErrorMsg</limiterrormsg>`n"; $LimitMode = $true }
     if ($LimitMode)          { $Result += "`t`t<limitmode>1</limitmode>`n" }
@@ -231,8 +233,14 @@ else {
     [ValueType] $timespan = New-TimeSpan -Minutes $intMinutes
 }
 
+# Prüfe, ob der angebebene Server existiert
+if (-not (Test-Connection -Computername $PrtgDevice -Quiet -Count 1) ) {
+    Set-PrtgError "Server existiert nicht!"
+}
+
+
 # Prüft, ob der ausführenden Benutzer Mitglied in den notwendigen Gruppen ist
-$QueryResult = Invoke-Command -Computername $PrtgDevice -ArgumentList (,$aNspSecurityGroups) -ScriptBlock {
+$QueryResult = Invoke-Command -Computername $PrtgDevice -ArgumentList ($aNspSecurityGroups) -ScriptBlock {
     
     param($aNspSecurityGroups)
     
@@ -248,53 +256,66 @@ if ($QueryResult -ne $null) {
 }
 
 ###
-### Abfrage eines bestimmten NoSpamProxy Gateways
-###
-
-if ($NspGatewayRoleName) {
-
-    $QueryResult = Invoke-Command -Computername $PrtgDevice -ArgumentList $timespan,$NspGatewayRoleName -ScriptBlock {
-    
-        param($timespan,$strNspGatewayRoleName)
-
-        if ( -not (Get-NspGatewayRole | Where-Object { $_.Name -eq $strNspGatewayRoleName }) ) {
-            return "NspGatewayRoleNotExist"
-        }
-        
-        $outItems = New-Object System.Collections.Generic.List[System.Object]
-
-        $outItems.Add( (Get-NspMessageTrack -Status Success -Age $timespan -Directions FromExternal -GatewayRole $strNspGatewayRoleName).Count)
-        $outItems.Add( (Get-NspMessageTrack -Status Success -Age $timespan -Directions FromLocal -GatewayRole $strNspGatewayRoleName).Count)
-        $outItems.Add( (Get-NspMessageTrack -Status PermanentlyBlocked -Age $timespan -Directions FromExternal -GatewayRole $strNspGatewayRoleName).Count)
-        $outItems.Add( (Get-NspMessageTrack -Status DeliveryPending -Age $timespan -Directions FromLocal -GatewayRole $strNspGatewayRoleName).Count)
-
-        return $outItems
-    }
-
-    if ($QueryResult -eq "NspGatewayRoleNotExist") {
-        Set-PrtgError "Eine Gatewayrolle mit dem Namen '$NspGatewayRole' existiert nicht!"
-    }
-}
-
-###
 ### Abfrage  aller existiernenden NoSpamProxy Gateways
 ###
 
-else {
-    $QueryResult = Invoke-Command -Computername $PrtgDevice -ArgumentList $timespan -ScriptBlock {
-    
-        param($timespan)
+$QueryResult = Invoke-Command -Computername $PrtgDevice -ArgumentList $timespan -ScriptBlock {
+       
+    # Declare variables
+    param($timespan)
+    $obCustomReturn = New-Object -TypeName System.Object
 
-        $outItems = New-Object System.Collections.Generic.List[System.Object]
+    # Fetch of NSP Message Tracking details ofe every Gateway Rolle
+    [array] $aNspNspMessageTrack = @()
 
-        $outItems.Add( (Get-NspMessageTrack -Status Success -Age $timespan -Directions FromExternal).Count)
-        $outItems.Add( (Get-NspMessageTrack -Status Success -Age $timespan -Directions FromLocal).Count)
-        $outItems.Add( (Get-NspMessageTrack -Status PermanentlyBlocked -Age $timespan -Directions FromExternal).Count)
-        $outItems.Add( (Get-NspMessageTrack -Status DeliveryPending -Age $timespan -Directions FromLocal).Count)
-
-        return $outItems
+    Get-NspGatewayRole | Select Name | ForEach-Object {  
+        $NspGatewayRole = $_ 
+        
+        $aNspNspMessageTrack += [pscustomobject]@{ NspGatewayRole="$($NspGatewayRole.Name) - InSuccess"; Anzahl=$(Get-NspMessageTrack -Status Success -Age $timespan -Directions FromExternal -GatewayRole ($_.Name)).Count }
+        $aNspNspMessageTrack += [pscustomobject]@{ NspGatewayRole="$($NspGatewayRole.Name) - OutSuccess"; Anzahl=$(Get-NspMessageTrack -Status Success -Age $timespan -Directions FromLocal -GatewayRole ($_.Name)).Count }
+        $aNspNspMessageTrack += [pscustomobject]@{ NspGatewayRole="$($NspGatewayRole.Name) - PermanentlyBlocked"; Anzahl=$(Get-NspMessageTrack -Status PermanentlyBlocked -Age $timespan -Directions FromExternal -GatewayRole ($_.Name)).Count }
+        $aNspNspMessageTrack += [pscustomobject]@{ NspGatewayRole="$($NspGatewayRole.Name) - OutboundPending"; Anzahl=$(Get-NspMessageTrack -Status DeliveryPending -Age $timespan -Directions FromLocal -GatewayRole ($_.Name)).Count }
     }
+    $obCustomReturn | Add-Member -MemberType NoteProperty -Name "NspMessageTrack" -Value $aNspNspMessageTrack
+
+
+    # Fetch of NSP Large File details
+    $obCustomReturn | Add-Member -MemberType NoteProperty -Name "LargeFiles" -Value (Get-NspLargeFile).count
+
+    # Fetch of NSP License details
+    $obCustomReturn | Add-Member -MemberType NoteProperty -Name "Lic" -Value (Get-NspLicense | select License)
+
+    # Fetch of NSP issues 
+    $obCustomReturn | Add-Member -MemberType NoteProperty -Name "Issues" -Value (Get-NspIssue).Count
+        
+
+    # Fetch of SSL Certificates from every connector
+    [array] $aNspTlsCertificates = @()
+
+    Get-NspReceiveConnector | Select Name, TlsCertificate | Where-Object { $_.TlsCertificate -notlike "None" } | ForEach-Object {            
+        $NspReceiveConnector = $_
+
+        $aNspTlsCertificates += [pscustomobject]@{ Connectorname=$($NspReceiveConnector.Name); CertNotAfter=$((Get-ChildItem "Cert:\LocalMachine\My" | `
+                                Where-Object { $_.Thumbprint -match $NspReceiveConnector.TlsCertificate.Thumbprint.ToUpper() }).NotAfter) }
+    }
+        
+    Get-NspOutboundSendConnector | Select Name, Dispatchers | Where-Object { $_.Dispatchers -ne $null } | foreach-Object { 
+
+        $NspOutboundSendConnector = $_
+        $NspOutboundSendConnectorDispatchers = Get-NspOutboundSendConnector -Name $NspOutboundSendConnector.Name | Select Dispatchers
+	
+        foreach ($connector in $NspOutboundSendConnectorDispatchers.Dispatchers) {
+            $aNspTlsCertificates += [pscustomobject]@{ Connectorname="$($NspOutboundSendConnector.Name) - $($connector.Smarthost)"; CertNotAfter=$((Get-ChildItem "Cert:\LocalMachine\My" | `
+                                    Where-Object { $_.Thumbprint -match $connector.TlsCertificate.Thumbprint.ToUpper() }).NotAfter) }	
+        }
+    }
+        
+    $obCustomReturn | Add-Member -MemberType NoteProperty -Name "TlsCertificateNotAfter" -Value $aNspTlsCertificates
+	    
+    # Retrun object
+    return $obCustomReturn
 }
+
 
 ###
 ### Generate PRTG Output
@@ -303,19 +324,39 @@ else {
 $xmlOutput = "<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>`n"
 $xmlOutput += "<prtg>`n"
 
-$xmlOutput += Set-PrtgResult -Channel "In/Out Success" -Value $($QueryResult[0] + $QueryResult[1]) -Unit Count -ShowChart
-$xmlOutput += Set-PrtgResult -Channel "In Success" -Value $QueryResult[0] -Unit Count -ShowChart
-$xmlOutput += Set-PrtgResult -Channel "Out Success" -Value $QueryResult[1] -Unit Count -ShowChart
-$xmlOutput += Set-PrtgResult -Channel "In PermanentlyBlocked" -Value $QueryResult[2] -Unit Count -ShowChart
+# Output of InSuccess, OutSuccess, PermanentlyBlocked and PermanentlyBlocked
+foreach ($entry in $QueryResult.NspMessageTrack) {
 
-if($QueryResult[3] -ne 0) {
-    $xmlOutput += Set-PrtgResult -Channel "Out DeliveryPending" -Value $QueryResult[3] -Unit Count -ShowChart -MaxWarn $intDeliveryPendingMaxWarn
+    If($entry.NspGatewayRole -like "*OutboundPending") {
+        $xmlOutput += Set-PrtgResult -Channel $entry.NspGatewayRole -Value $entry.Anzahl -Unit Mails -ShowChart -MaxWarn $intDeliveryPendingMaxWarn
+    }
+    else {
+        $xmlOutput += Set-PrtgResult -Channel $entry.NspGatewayRole -Value $entry.Anzahl -Unit Mails -ShowChart
+    }
+
+}
+
+# Output of Large Files on the web server
+$xmlOutput += Set-PrtgResult -Channel "LargeFiles" -Value $QueryResult.LargeFiles -Unit Dateien -ShowChart
+
+# Output of number of days till the nsp license expires
+$xmlOutput += Set-PrtgResult -Channel "Ablauf der NSP Lizenz" -Value (($QueryResult.Lic.License.ServiceContractExpiresOn - $dtNow).Days) -Unit Tage -MinWarn 60 -MinError 30
+
+# Output of NSP issues
+if($QueryResult.Issues -eq "1") {
+    $xmlOutput += Set-PrtgResult -Channel "Problem(e)" -Value $QueryResult.Issues -Unit Vorfall -ShowChart -MaxWarn 1 -MaxError 2
 }
 else {
-    $xmlOutput += Set-PrtgResult -Channel "Out DeliveryPending" -Value $QueryResult[3] -Unit Count -ShowChart 
+    $xmlOutput += Set-PrtgResult -Channel "Problem(e)" -Value $QueryResult.Issues -Unit Vorfaelle -ShowChart -MaxWarn 1 -MaxError 2
+}
+
+# Output of number of days till the ssl certifcates on the differnet connectors expires
+foreach ($entry in $QueryResult.TlsCertificateNotAfter) {
+    $xmlOutput += Set-PrtgResult -Channel "SSL-Zertifikat '$($entry.Connectorname)'" -Value ($entry.CertNotAfter - $dtNow).Days -Unit Tage -MinWarn 28 -MinError 14
 }
 
 $xmlOutput += '</prtg>'
 
 # Return Xml
 $xmlOutput
+
