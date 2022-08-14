@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <ValueLookup id="prtg.azure.trafficmanager.profilestatus" desiredValue="0" undefinedState="Error">
+    <Lookups>
+      <SingleInt state="Ok" value="0">
+        Enabled
+      </SingleInt>
+      <SingleInt state="Warning" value="1">
+        Disabled
+      </SingleInt>
+    </Lookups>
+  </ValueLookup>
