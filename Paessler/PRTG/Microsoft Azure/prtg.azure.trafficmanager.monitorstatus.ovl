@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <ValueLookup id="prtg.azure.trafficmanager.monitorstatus" desiredValue="0" undefinedState="Error">
+    <Lookups>
+      <SingleInt state="Ok" value="0">
+        Online
+      </SingleInt>
+      <SingleInt state="Ok" value="1">
+        Disabled
+      </SingleInt>
+	  <SingleInt state="Warning" value="2">
+        Degraded
+      </SingleInt>
+	  <SingleInt state="Ok" value="3">
+        Inactive
+      </SingleInt>
+	  <SingleInt state="Warning" value="4">
+        CheckingEndpoints
+      </SingleInt>
+	  <SingleInt state="Error" value="5">
+        Failed
+      </SingleInt>
+    </Lookups>
+  </ValueLookup>
