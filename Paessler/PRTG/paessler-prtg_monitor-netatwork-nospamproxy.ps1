@@ -47,6 +47,7 @@ Date                   Comment
 21.09.2019, 21:20 Uhr  Changed output in Set-PrtgError
 21.09.2019, 21:20 Uhr  Fixed variable name in Set-PrtgResult
 24.04.2022, 18:53 Uhr  Code base revised & added new querys
+03.09.2022, 16:28 Uhr  Modifications for version 14
 
 
 The following parameters of the message tracking information are available
@@ -62,6 +63,7 @@ https://github.com/dwydler/Powershell-Skripte/tree/master/Paessler/PRTG
 
 .EXAMPLE
 .\paessler-prtg_monitor-netatwork-nospamproxy.ps1 "Computername" "Intervall des PRTG Sensors"
+.\paessler-prtg_monitor-netatwork-nospamproxy.ps1 "Computername" "Intervall des PRTG Sensors" "Name der NSP Gateway Rolle"
 #>
 
 #---------------------------------------------------------[Initialisations]--------------------------------------------------------
@@ -283,7 +285,7 @@ $QueryResult = Invoke-Command -Computername $PrtgDevice -ArgumentList $timespan 
     $obCustomReturn | Add-Member -MemberType NoteProperty -Name "LargeFiles" -Value (Get-NspLargeFile).count
 
     # Fetch of NSP License details
-    $obCustomReturn | Add-Member -MemberType NoteProperty -Name "Lic" -Value (Get-NspLicense | select License)
+    $obCustomReturn | Add-Member -MemberType NoteProperty -Name "Lic" -Value (Get-NspLicense | Select $_)
 
     # Fetch of NSP issues 
     $obCustomReturn | Add-Member -MemberType NoteProperty -Name "Issues" -Value (Get-NspIssue).Count
@@ -298,7 +300,7 @@ $QueryResult = Invoke-Command -Computername $PrtgDevice -ArgumentList $timespan 
         $aNspTlsCertificates += [pscustomobject]@{ Connectorname=$($NspReceiveConnector.Name); CertNotAfter=$((Get-ChildItem "Cert:\LocalMachine\My" | `
                                 Where-Object { $_.Thumbprint -match $NspReceiveConnector.TlsCertificate.Thumbprint.ToUpper() }).NotAfter) }
     }
-        
+
     Get-NspOutboundSendConnector | Select Name, Dispatchers | Where-Object { $_.Dispatchers -ne $null } | foreach-Object { 
 
         $NspOutboundSendConnector = $_
@@ -306,16 +308,16 @@ $QueryResult = Invoke-Command -Computername $PrtgDevice -ArgumentList $timespan 
 	
         foreach ($connector in $NspOutboundSendConnectorDispatchers.Dispatchers) {
             $aNspTlsCertificates += [pscustomobject]@{ Connectorname="$($NspOutboundSendConnector.Name) - $($connector.Smarthost)"; CertNotAfter=$((Get-ChildItem "Cert:\LocalMachine\My" | `
-                                    Where-Object { $_.Thumbprint -match $connector.TlsCertificate.Thumbprint.ToUpper() }).NotAfter) }	
+                                    Where-Object { $_.Thumbprint -match $connector.TlsCertificateThumbprint.ToUpper() }).NotAfter) }	
         }
     }
         
     $obCustomReturn | Add-Member -MemberType NoteProperty -Name "TlsCertificateNotAfter" -Value $aNspTlsCertificates
-	    
+	
+    
     # Retrun object
     return $obCustomReturn
 }
-
 
 ###
 ### Generate PRTG Output
@@ -340,7 +342,7 @@ foreach ($entry in $QueryResult.NspMessageTrack) {
 $xmlOutput += Set-PrtgResult -Channel "LargeFiles" -Value $QueryResult.LargeFiles -Unit Dateien -ShowChart
 
 # Output of number of days till the nsp license expires
-$xmlOutput += Set-PrtgResult -Channel "Ablauf der NSP Lizenz" -Value (($QueryResult.Lic.License.ServiceContractExpiresOn - $dtNow).Days) -Unit Tage -MinWarn 60 -MinError 30
+$xmlOutput += Set-PrtgResult -Channel "Ablauf der NSP Lizenz" -Value (($QueryResult.Lic.ServiceContractExpiresOn - $dtNow).Days) -Unit Tage -MinWarn 60 -MinError 30
 
 # Output of NSP issues
 if($QueryResult.Issues -eq "1") {
