@@ -229,7 +229,7 @@ function Set-PrtgResult {
 
 # Check if an check interval was passed
 if ($intMinutes -eq 0) {
-    Set-PrtgError "Kein Abfrageintervall übergeben!"
+    Set-PrtgError "Kein Abfrageintervall angegeben!"
 }
 else {
     [ValueType] $timespan = New-TimeSpan -Minutes $intMinutes
