@@ -23,7 +23,7 @@ This script returns Xml for a custom PRTG sensor providing the following channel
 Name des Servers, auf dem die NoSpamProxy Intranet Rolle installiert ist.
 
 .PARAMETER intMinutes
-Dieser Parameter muss indentisch sein, mit dem Abfrage Interverall des PRTG Sensors, welcher dieses Skript ausführt.Angabe in Minuten!
+Dieser Parameter muss indentisch sein, mit dem Abfrage Interverall des PRTG Sensors, welcher dieses Skript ausfuehrt. Angabe in Minuten!
 
 .INPUTS
 None
