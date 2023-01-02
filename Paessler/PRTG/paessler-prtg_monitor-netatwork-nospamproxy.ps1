@@ -281,7 +281,7 @@ $QueryResult = Invoke-Command -Computername $PrtgDevice -ArgumentList $timespan 
     # Fetch of NSP Message Tracking details ofe every Gateway Rolle
     [array] $aNspNspMessageTrack = @()
 
-    Get-NspGatewayRole | Select Name | ForEach-Object {  
+    Get-NspGatewayRole | Select-Object Name | ForEach-Object {  
         $NspGatewayRole = $_ 
         
         $aNspNspMessageTrack += [pscustomobject]@{ NspGatewayRole="$($NspGatewayRole.Name) - InSuccess"; Anzahl=$(Get-NspMessageTrack -Status Success -Age $timespan -Directions FromExternal -GatewayRole ($_.Name)).Count }
@@ -296,7 +296,7 @@ $QueryResult = Invoke-Command -Computername $PrtgDevice -ArgumentList $timespan 
     $obCustomReturn | Add-Member -MemberType NoteProperty -Name "LargeFiles" -Value (Get-NspLargeFile).count
 
     # Fetch of NSP License details
-    $obCustomReturn | Add-Member -MemberType NoteProperty -Name "Lic" -Value (Get-NspLicense | Select $_)
+    $obCustomReturn | Add-Member -MemberType NoteProperty -Name "Lic" -Value (Get-NspLicense | Select-Object $_)
 
     # Fetch of NSP issues 
     $obCustomReturn | Add-Member -MemberType NoteProperty -Name "Issues" -Value (Get-NspIssue).Count
@@ -306,7 +306,7 @@ $QueryResult = Invoke-Command -Computername $PrtgDevice -ArgumentList $timespan 
     [array] $aNspTlsCertificates = @()
 
     # Fetch informations from all receive connectors
-    Get-NspReceiveConnector | Select Name, TlsCertificate | Where-Object { $_.TlsCertificate -notlike "None" } | ForEach-Object {            
+    Get-NspReceiveConnector | Select-Object Name, TlsCertificate | Where-Object { $_.TlsCertificate -notlike "None" } | ForEach-Object {            
         $NspReceiveConnector = $_
 
         $aNspTlsCertificates += [pscustomobject]@{ Connectorname=$($NspReceiveConnector.Name); CertNotAfter=$((Get-ChildItem "Cert:\LocalMachine\My" | `
@@ -314,10 +314,10 @@ $QueryResult = Invoke-Command -Computername $PrtgDevice -ArgumentList $timespan 
     }
 
     # Fetch informations from all outbound send connectors
-    Get-NspOutboundSendConnector | Select Name, Dispatchers | Where-Object { $_.Dispatchers -ne $null } | foreach-Object { 
+    Get-NspOutboundSendConnector | Select-Object Name, Dispatchers | Where-Object { $_.Dispatchers -ne $null } | foreach-Object { 
 
         $NspOutboundSendConnector = $_
-        $NspOutboundSendConnectorDispatchers = Get-NspOutboundSendConnector -Name $NspOutboundSendConnector.Name | Select Dispatchers
+        $NspOutboundSendConnectorDispatchers = Get-NspOutboundSendConnector -Name $NspOutboundSendConnector.Name | Select-Object Dispatchers
 	
         foreach ($connector in $NspOutboundSendConnectorDispatchers.Dispatchers) {
             $aNspTlsCertificates += [pscustomobject]@{ Connectorname="$($NspOutboundSendConnector.Name) - $($connector.Smarthost)"; CertNotAfter=$((Get-ChildItem "Cert:\LocalMachine\My" | `
