@@ -255,7 +255,7 @@ try {
 }
 catch {
     if($_.Exception -like "*Access is denied*") {
-        Set-PrtgError "Benutzer `"$env:USERNAME`" ist nicht Mitglied der Gruppe Remoteverwaltungsbenutzer!"
+        Set-PrtgError "Benutzer `"$env:USERNAME`" ist nicht Mitglied der Gruppe 'Remoteverwaltungsbenutzer'!"
     }
     else {
         Set-PrtgError $_.Exception
