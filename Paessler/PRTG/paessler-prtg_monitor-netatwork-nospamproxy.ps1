@@ -324,7 +324,15 @@ $QueryResult = Invoke-Command -Computername $PrtgDevice -ArgumentList $timespan 
                                     Where-Object { $_.Thumbprint -match $connector.TlsCertificateThumbprint.ToUpper() }).NotAfter) }	
         }
     }
-        
+
+    # Fetch informations from all inbound send connectors
+    [array] $NspinboundSendConnector = Get-NspInboundSendConnector
+
+    for ($i = 0; $i -lt $NspinboundSendConnector.Count; $i ++) {
+        $aNspTlsCertificates += [pscustomobject]@{ Connectorname="$($NspinboundSendConnector[$i].Configuration.Name)"; CertNotAfter=$((Get-ChildItem "Cert:\LocalMachine\My" | `
+                                    Where-Object { $_.Thumbprint -match $NspinboundSendConnector[$i].Configuration.Dispatchers.TlsCertificateThumbprint.ToUpper() }).NotAfter) }
+    }
+    
     $obCustomReturn | Add-Member -MemberType NoteProperty -Name "TlsCertificateNotAfter" -Value $aNspTlsCertificates
 	
     
