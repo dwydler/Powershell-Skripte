@@ -319,7 +319,7 @@ $QueryResult = Invoke-Command -Computername $PrtgDevice -ArgumentList $timespan 
         $NspOutboundSendConnectorDispatchers = Get-NspOutboundSendConnector -Name $NspOutboundSendConnector.Name | Select-Object Dispatchers
 	
         foreach ($connector in $NspOutboundSendConnectorDispatchers.Dispatchers) {
-            $aNspTlsCertificates += [pscustomobject]@{ Connectorname="$($NspOutboundSendConnector.Name) - $($connector.Smarthost)"; CertNotAfter=$((Get-ChildItem "Cert:\LocalMachine\My" | `
+            $aNspTlsCertificates += [pscustomobject]@{ Connectorname="$($NspOutboundSendConnector.Name)"; CertNotAfter=$((Get-ChildItem "Cert:\LocalMachine\My" | `
                                     Where-Object { $_.Thumbprint -match $connector.TlsCertificateThumbprint.ToUpper() }).NotAfter) }	
         }
     }
