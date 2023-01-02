@@ -88,12 +88,13 @@ Clear-Host
 
 #----------------------------------------------------------[Declarations]----------------------------------------------------------
 
-#
+# Required NoSpamProxy Groups for this script
 [array] $aNspSecurityGroups = @("NoSpamProxy Configuration Administrators", "NoSpamProxy Monitoring Administrators")
 
 # Default warning level for delivery pending messages
 [int] $intDeliveryPendingMaxWarn = 10
 
+# PRTG sensor xml structure
 [string] $strXmlOutput = ""
 
 # Datum und Uhrzeit zur Laufzeit des Skripts
