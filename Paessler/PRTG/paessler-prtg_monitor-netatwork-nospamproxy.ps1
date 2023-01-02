@@ -237,7 +237,7 @@ else {
 
 # Check if the server is reachable
 if (-not (Test-Connection -Computername $PrtgDevice -Quiet -Count 1) ) {
-    Set-PrtgError "Server existiert nicht!"
+    Set-PrtgError "Der Server ist per ICMP nicht erreichbar!"
 }
 
 
