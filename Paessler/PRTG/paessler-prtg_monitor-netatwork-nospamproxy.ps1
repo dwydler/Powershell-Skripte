@@ -88,9 +88,8 @@ Clear-Host
 
 #----------------------------------------------------------[Declarations]----------------------------------------------------------
 
-
+#
 [array] $aNspSecurityGroups = @("NoSpamProxy Configuration Administrators", "NoSpamProxy Monitoring Administrators")
-#[array] $aNspSecurityGroups = @("Benutzer")
 
 # Default warning level for delivery pending messages
 [int] $intDeliveryPendingMaxWarn = 10
