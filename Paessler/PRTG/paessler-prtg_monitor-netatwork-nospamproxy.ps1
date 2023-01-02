@@ -240,7 +240,6 @@ if (-not (Test-Connection -Computername $PrtgDevice -Quiet -Count 1) ) {
     Set-PrtgError "Der Server ist per ICMP nicht erreichbar!"
 }
 
-
 # Check if the service user of the PRTG Probe Server are member of the required groups
 try {
     $QueryResult = Invoke-Command -Computername $PrtgDevice -ArgumentList ($aNspSecurityGroups) -ErrorAction Stop -ScriptBlock {
@@ -300,7 +299,6 @@ $QueryResult = Invoke-Command -Computername $PrtgDevice -ArgumentList $timespan 
     # Fetch of NSP issues 
     $obCustomReturn | Add-Member -MemberType NoteProperty -Name "Issues" -Value (Get-NspIssue).Count
         
-
     # Fetch of SSL Certificates from every connector
     [array] $aNspTlsCertificates = @()
 
