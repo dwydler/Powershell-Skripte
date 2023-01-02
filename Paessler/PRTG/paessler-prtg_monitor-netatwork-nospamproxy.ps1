@@ -370,7 +370,7 @@ foreach ($entry in $QueryResult.TlsCertificateNotAfter) {
     $xmlOutput += Set-PrtgResult -Channel "SSL-Zertifikat '$($entry.Connectorname)'" -Value ($entry.CertNotAfter - $dtNow).Days -Unit Tage -MinWarn 28 -MinError 14
 }
 
-$xmlOutput += '</prtg>'
+$xmlOutput += "</prtg>"
 
 # Return Xml
 $xmlOutput
