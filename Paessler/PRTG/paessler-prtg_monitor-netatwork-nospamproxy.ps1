@@ -366,8 +366,8 @@ else {
 }
 
 # Output of number of days till the ssl certifcates on the differnet connectors expires
-foreach ($entry in $QueryResult.TlsCertificateNotAfter) {
-    $xmlOutput += Set-PrtgResult -Channel "SSL-Zertifikat '$($entry.Connectorname)'" -Value ($entry.CertNotAfter - $dtNow).Days -Unit Tage -MinWarn 28 -MinError 14
+$QueryResult.TlsCertificateNotAfter | ForEach-Object {
+    $xmlOutput += Set-PrtgResult -Channel "SSL-Zertifikat des Konnektors '$($_.Connectorname)'" -Value ($_.CertNotAfter - $dtNow).Days -Unit Tage -MinWarn 28 -MinError 14
 }
 
 $xmlOutput += "</prtg>"
