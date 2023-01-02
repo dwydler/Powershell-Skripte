@@ -263,7 +263,7 @@ catch {
 }
 
 # Check if the return value of the query are empty
-if ($QueryResult -ne $null) {
+if ($null -ne $QueryResult) {
     Set-PrtgError $QueryResult
 }
 
