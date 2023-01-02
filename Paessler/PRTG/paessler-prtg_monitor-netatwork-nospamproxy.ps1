@@ -291,7 +291,6 @@ $QueryResult = Invoke-Command -Computername $PrtgDevice -ArgumentList $timespan 
     }
     $obCustomReturn | Add-Member -MemberType NoteProperty -Name "NspMessageTrack" -Value $aNspNspMessageTrack
 
-
     # Fetch of NSP Large File details
     $obCustomReturn | Add-Member -MemberType NoteProperty -Name "LargeFiles" -Value (Get-NspLargeFile).count
 
