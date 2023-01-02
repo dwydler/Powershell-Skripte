@@ -241,17 +241,27 @@ if (-not (Test-Connection -Computername $PrtgDevice -Quiet -Count 1) ) {
 }
 
 
-# Prüft, ob der ausführenden Benutzer Mitglied in den notwendigen Gruppen ist
-$QueryResult = Invoke-Command -Computername $PrtgDevice -ArgumentList ($aNspSecurityGroups) -ScriptBlock {
+# Check if the service user of the PRTG Probe Server are member of the required groups
+try {
+    $QueryResult = Invoke-Command -Computername $PrtgDevice -ArgumentList ($aNspSecurityGroups) -ErrorAction Stop -ScriptBlock {
     
-    param($aNspSecurityGroups)
+        param($aNspSecurityGroups)
     
-    foreach ($strNspGroup in $aNspSecurityGroups) {
-        if( (Get-LocalGroupMember $strNspGroup).Name -contains $([Security.Principal.WindowsIdentity]::GetCurrent().Name) -eq $false ) {
-            return "Der Benutzer ist nicht Mitglied der lokalen Gruppe '$strNspGroup'!"
+        foreach ($strNspGroup in $aNspSecurityGroups) {
+            if( (Get-LocalGroupMember $strNspGroup).Name -contains $([Security.Principal.WindowsIdentity]::GetCurrent().Name) -eq $false ) {
+                return "Der Benutzer ist nicht Mitglied der lokalen Gruppe '$strNspGroup'!"
+            }
         }
+    } 
+}
+catch {
+    if($_.Exception -like "*Access is denied*") {
+        Set-PrtgError "Benutzer `"$env:USERNAME`" ist nicht Mitglied der Gruppe Remoteverwaltungsbenutzer!"
     }
-} 
+    else {
+        Set-PrtgError $_.Exception
+    }
+}
 
 if ($QueryResult -ne $null) {
     Set-PrtgError $QueryResult
