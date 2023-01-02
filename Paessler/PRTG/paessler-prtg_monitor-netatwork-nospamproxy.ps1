@@ -97,7 +97,7 @@ Clear-Host
 # PRTG sensor xml structure
 [string] $strXmlOutput = ""
 
-# Datum und Uhrzeit zur Laufzeit des Skripts
+# Date and time when the script was run
 [datetime] $dtNow = Get-Date
 
 #-----------------------------------------------------------[Functions]------------------------------------------------------------
@@ -227,7 +227,7 @@ function Set-PrtgResult {
 
 #-----------------------------------------------------------[Execution]------------------------------------------------------------
 
-# Überprüfe, ob der Intervall übergeben worden ist
+# Check if an check interval was passed
 if ($intMinutes -eq 0) {
     Set-PrtgError "Kein Abfrageintervall übergeben!"
 }
@@ -235,7 +235,7 @@ else {
     [ValueType] $timespan = New-TimeSpan -Minutes $intMinutes
 }
 
-# Prüfe, ob der angebebene Server existiert
+# Check if the server is reachable
 if (-not (Test-Connection -Computername $PrtgDevice -Quiet -Count 1) ) {
     Set-PrtgError "Server existiert nicht!"
 }
@@ -263,12 +263,13 @@ catch {
     }
 }
 
+# Check if the return value of the query are empty
 if ($QueryResult -ne $null) {
     Set-PrtgError $QueryResult
 }
 
 ###
-### Abfrage  aller existiernenden NoSpamProxy Gateways
+### Query all existing NoSpamProxy Gateways
 ###
 
 $QueryResult = Invoke-Command -Computername $PrtgDevice -ArgumentList $timespan -ScriptBlock {
@@ -304,6 +305,7 @@ $QueryResult = Invoke-Command -Computername $PrtgDevice -ArgumentList $timespan 
     # Fetch of SSL Certificates from every connector
     [array] $aNspTlsCertificates = @()
 
+    # Fetch informations from all receive connectors
     Get-NspReceiveConnector | Select Name, TlsCertificate | Where-Object { $_.TlsCertificate -notlike "None" } | ForEach-Object {            
         $NspReceiveConnector = $_
 
@@ -311,6 +313,7 @@ $QueryResult = Invoke-Command -Computername $PrtgDevice -ArgumentList $timespan 
                                 Where-Object { $_.Thumbprint -match $NspReceiveConnector.TlsCertificate.Thumbprint.ToUpper() }).NotAfter) }
     }
 
+    # Fetch informations from all outbound send connectors
     Get-NspOutboundSendConnector | Select Name, Dispatchers | Where-Object { $_.Dispatchers -ne $null } | foreach-Object { 
 
         $NspOutboundSendConnector = $_
