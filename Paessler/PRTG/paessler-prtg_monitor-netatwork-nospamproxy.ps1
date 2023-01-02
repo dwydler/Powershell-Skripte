@@ -323,7 +323,7 @@ $QueryResult = Invoke-Command -Computername $PrtgDevice -ArgumentList $timespan 
     }
 
     # Fetch informations from all inbound send connectors
-    [array] $NspinboundSendConnector = Get-NspInboundSendConnector
+    [array] $NspinboundSendConnector = Get-NspInboundSendConnector -Type SMTP
 
     for ($i = 0; $i -lt $NspinboundSendConnector.Count; $i ++) {
         $aNspTlsCertificates += [pscustomobject]@{ Connectorname="$($NspinboundSendConnector[$i].Configuration.Name)"; CertNotAfter=$((Get-ChildItem "Cert:\LocalMachine\My" | `
