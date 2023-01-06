@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-Dieses Skript ruft die Garantieinformationen eines Geräts vom Hersteller Fujitsu ab
+This script retrieves the warranty information of a device from the manufacturer Fujitsu
 
 Daniel Wydler
 
@@ -11,36 +11,36 @@ RISK OF THE USE OR THE RESULTS FROM THE USE OF THIS CODE REMAINS WITH THE USER.
 
  
 .PARAMETER SerialNumber
-Angabe der Seriennummer des Geräts, welches abgefragt werden soll
+Specification of the serial number of the device that is to be queried
 
 .PARAMETER csv
-Ausgabe der Gerätedaten in eine CSV Datei
+Output of the device data in a CSV file
 
 .PARAMETER Interactive
-Skript wird am Ende nicht automatisch beendet
+Script does not exit automatically when finished
 
- 
 .INPUTS
-Die Seriennummer des Geräts
+The serial number of the device
  
 .OUTPUTS
-Ausgabe der Garantieinformationen des Geräts
+Output of the warranty information of the device
  
 .NOTES
-File:           fujtisu-support_check-warranty-status
+File:           fujitsu-warranty-status-checker.ps1
 Author:         Daniel Wydler
 Creation Date:  10.03.2019, 10:32 Uhr
 
 .COMPONENT
-None
+The script supports a multilingual environment. Default language is english. More details on that:
+https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/import-localizeddata?view=powershell-7.3
 
 .LINK
-https://github.com/dwydler/Powershell-Skripte/blob/master/Fujitsu/fujtisu-support_check-warranty-status.ps1
+https://codeberg.org/wd/Powershell-Skripte/src/branch/master/Fujitsu/FujitsuWarrantyStatusChecker/
 
 .EXAMPLE
-.\fujtisu-support_check-warranty-status -SerialNumber "YM5G017837"
-.\fujtisu-support_check-warranty-status -SerialNumber "YM5G017837" -Interactive
-.\fujtisu-support_check-warranty-status -SerialNumber "YM5G017837;YLPW019174" -csv
+.\fujitsu-warranty-status-checker.ps1 -SerialNumber "YM5G017837"
+.\fujitsu-warranty-status-checker.ps1 -SerialNumber "YM5G017837" -Interactive
+.\fujitsu-warranty-status-checker.ps1 -SerialNumber "YM5G017837;YLPW019174" -csv
 #>
 
 #---------------------------------------------------------[Initialisations]--------------------------------------------------------
@@ -64,7 +64,7 @@ Clear-Host
 #----------------------------------------------------------[Declarations]----------------------------------------------------------
 
 ### function Write-Log
-[string] $strLogfilePath = $(pwd).Path
+[string] $strLogfilePath = $(Get-Location).Path
 [string] $strLogfileDate = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
 [string] $strLogfileNamePrefix = "Log_"
 [string] $strLogfileName = $($strLogfileNamePrefix + $strLogfileDate + ".log")
@@ -74,7 +74,7 @@ Clear-Host
 ### Variables for this script 
 [array] $aSerialNumbers = @()
 
-[string] $strCsvFilePath = $(pwd).Path
+[string] $strCsvFilePath = $(Get-Location).Path
 [string] $strCsvFileDate = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
 [string] $strCsvFileNamePrefix = "Export_"
 [string] $strCsvFileName = $($strCsvFileNamePrefix + $strCsvFileDate + ".csv")
@@ -93,7 +93,7 @@ function WorkingDir {
         [switch] $Debugging
     )
 
-    # Splittet aus dem vollstÃ¤ndigen Dateipfad den Verzeichnispfad heraus
+    # Splittet aus dem vollstaendigen Dateipfad den Verzeichnispfad heraus
     # Beispiel: D:\Daniel\Temp\Unbenannt2.ps1 -> D:\Daniel\Temp
     [string] $strWorkingdir = Split-Path $MyInvocation.PSCommandPath -Parent
 
@@ -103,7 +103,7 @@ function WorkingDir {
     }
 
     # In das Verzeichnis wechseln
-    cd $strWorkingdir
+    Set-Location $strWorkingdir
 }
 
 function Write-Log {
@@ -111,7 +111,7 @@ function Write-Log {
     param (
         [Parameter(Mandatory, Position=0)]
         [ValidateNotNullOrEmpty()]
-        [string] $LogText = "",
+        [string] $LogText,
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
@@ -141,7 +141,7 @@ function Write-Log {
         $strLogFileHeader += "{0,-21} {1,0}" -f "# Skript:", "$($MyInvocation.ScriptName)`n"
         $strLogFileHeader += "{0,-21} {1,0}" -f "# Startzeit:", "$(Get-Date -Format "dd.MM.yyyy HH:mm:ss")`n"
         $strLogFileHeader += "{0,-21} {1,0}" -f "# Startzeit:", "$(Get-Date -Format "dd.MM.yyyy HH:mm:ss")`n"
-        $strLogFileHeader += "{0,-21} {1,0}" -f "# Ausführendes Konto:", "$([Security.Principal.WindowsIdentity]::GetCurrent().Name)`n"
+        $strLogFileHeader += "{0,-21} {1,0}" -f "# BenutzerKonto:", "$env:username`n"
         $strLogFileHeader += "{0,-21} {1,0}" -f "# Computername:", "$env:COMPUTERNAME`n"
         $strLogFileHeader += "$("#" * 120)`n"
 
@@ -199,105 +199,106 @@ Function ValidSerialNumber ([string] $strLocSerialNumber) {
 
 #------------------------------------------------------------[Modules]-------------------------------------------------------------
 
-#-----------------------------------------------------------[Execution]------------------------------------------------------------
-
-# Wechselt in das Verzeichnis, in dem das PowerShell Skript liegt
+# Changes to the directory in which the PowerShell script is located
 WorkingDir
 
+# Import Locale data
+. .\locale\UICulture.ps1
+
+#-----------------------------------------------------------[Execution]------------------------------------------------------------
 
 Write-Host @"
 ------------------------------------------------------------------------------------------------------------------------
 
-                                        Fujitsu Garantie / Service Status ueberpruefen
+                                        $($uiLanguage.ScriptTitle)
 
 ------------------------------------------------------------------------------------------------------------------------
 "@
 
-Write-Log -LogText "Überprüfen ob Seriennummern(n) als Parameter übergeben worden sind." -LogStatus Info
+#
+Write-Log -LogText $uiLanguage.CheckParmSerial -LogStatus Info
 if ($SerialNumber -eq "") {
-    Write-Log -LogText "Keine Seriennummern gefünden." -LogStatus Info -Absatz
+    Write-Log -LogText $uiLanguage.CheckParmSerialErrorText -LogStatus Info -Absatz
 
     do {
-        $SerialNumber = Read-Host "Bitte Seriennummer(n) eingebenn (z.B. YLPW019174;DSET073915)"
+        $SerialNumber = Read-Host $uiLanguage.QuerySerialInfoText
     } while ($SerialNumber -eq "")    
 }
 else {
-    Write-Log -LogText "Mindestens eine Serienummer gefunden." -LogStatus Info -Absatz
+    Write-Log -LogText $uiLanguage.CheckParmSerialResult -LogStatus Info -Absatz
 }
 
 
-# Seriennummern von einem String in ein Array konvertieren
+# Convert serial numbers from a string to an array
 $aSerialNumbers = $SerialNumber -split ';'
 
 
-# Falls der Parameter "csv" angegeben wurde, wird die CSV Datei angelegt.
+# If the "csv" parameter was specified, the CSV file is created.
 if ($csv) {
-    Add-Content -Path "$strCsvFile"  -Value '"Seriennummer";"Produkt";"AdlerProdukt";"AdlerProduktFamilie";"Support Code";"Support Start";"Support Ende";"Produkt Support Ende";"Support Details";"Garantie Gruppe";"Support Offering Gruppe";"Bestellnummer"' -Encoding UTF8
+    Add-Content -Path "$strCsvFile"  -Value $uiLanguage.CsvFileTitles -Encoding UTF8
 }
-
 
 ForEach ($sn in $aSerialNumbers) {
 
-    Write-Log -LogText "Überprüfen des Muster/Länger der Seriennummer '$sn'." -LogStatus Info
+    Write-Log -LogText "$($uiLanguage.CheckSerialInfoText) '$sn'." -LogStatus Info
     if (ValidSerialNumber $sn ) {
-        Write-Log -LogText "Gültige Seriennummer '$sn' erkannt." -LogStatus Success -Absatz
+        Write-Log -LogText $uiLanguage.CheckSerialInfoOk -LogStatus Success -Absatz
 
 
-        Write-Log -LogText "Aktuellen Token der Webseite auslesen" -LogStatus Info
+        Write-Log -LogText $uiLanguage.WebsiteFtsQueryTokenInfo -LogStatus Info
         $wroSearchHtml = Invoke-WebRequest -Method Get -Uri "https://support.ts.fujitsu.com/IndexWarranty.asp?lng=de"
-        [string] $strFtsWebsiteToken = (($wroSearchHtml.tostring() -split "[`r`n]" | Select-String "Token" | Select -First 1) -split ":")[1].Trim() -replace "'", ""
+        [string] $strFtsWebsiteToken = (($wroSearchHtml.tostring() -split "[`r`n]" | Select-String "Token" | Select-Object -First 1) -split ":")[1].Trim() -replace "'", ""
 
 
-        Write-Log -LogText "Abfrage der Daten des Geräts bei Fujitsu." -LogStatus Info
+        Write-Log -LogText $uiLanguage.WebsiteFtsQueryDataInfo -LogStatus Info
         $wroSearchHtml = Invoke-WebRequest -Method Post -Headers $htFtsHeaders -Uri "https://support.ts.fujitsu.com/ProductCheck/Default.aspx" `
                             -Body "lng=de&GotoDiv=Warranty/FWarrantyStatus&DivID=indexwarranty&GotoUrl=IndexWarranty&RegionID=1&Ident=$sn&Token=$strFtsWebsiteToken"
 
         
-        Write-Log -LogText "Erhaltene Daten filtern und speichern." -LogStatus Info
+        Write-Log -LogText $uiLanguage.WebsiteFtsDataFilterInfo -LogStatus Info
         [array] $arrFujitsuDeviceWarrentyInfos = $wroSearchHtml.InputFields | Where-Object { ($_.name -eq "Ident") -or ($_.name -eq "Product") -or ($_.name -eq "AdlerProduct") -or ($_.name -eq "AdlerProductFam") -or ($_.name -eq "MS90") `
             -or ($_.name -eq "Firstuse") -or ($_.name -eq "WarrantyEndDate")  -or ($_.name -eq "WCode") -or ($_.name -eq "WCodeDesc") -or ($_.name -eq "PartNumber") -or ($_.name -eq "WGR") -or ($_.name -eq "SOG") } | Select-Object Name, Value
         
 
-        # Ausgabe der Daten
-        Write-Log -LogText "`tSeriennummer:`t`t`t$($arrFujitsuDeviceWarrentyInfos[0].value)" -LogStatus Info
-        Write-Log -LogText "`tProdukt:`t`t`t`tFujitsu $($arrFujitsuDeviceWarrentyInfos[1].value)" -LogStatus Info
-        Write-Log -LogText "`tAdlerProdukt:`t`t`tFujitsu $($arrFujitsuDeviceWarrentyInfos[2].value)" -LogStatus Info
-        Write-Log -LogText "`tAdlerProduktFamilie:`tFujitsu $($arrFujitsuDeviceWarrentyInfos[3].value)" -LogStatus Info
-        Write-Log -LogText "`tSupport Code:`t`t`t$($arrFujitsuDeviceWarrentyInfos[4].value)" -LogStatus Info
+        # Output of device data
+        Write-Log -LogText "`t$($uiLanguage.DeviceDataSerial):`t`t`t$($arrFujitsuDeviceWarrentyInfos[0].value)" -LogStatus Info
+        Write-Log -LogText "`t$($uiLanguage.DeviceDataProduct):`t`t`tFujitsu $($arrFujitsuDeviceWarrentyInfos[1].value)" -LogStatus Info
+        Write-Log -LogText "`t$($uiLanguage.DeviceDataAdlerProduct):`t`t`tFujitsu $($arrFujitsuDeviceWarrentyInfos[2].value)" -LogStatus Info
+        Write-Log -LogText "`t$($uiLanguage.DeviceDataAdlerProductFamily):`t`tFujitsu $($arrFujitsuDeviceWarrentyInfos[3].value)" -LogStatus Info
+        Write-Log -LogText "`t$($uiLanguage.DeviceDataSupportCode):`t`t`t$($arrFujitsuDeviceWarrentyInfos[4].value)" -LogStatus Info
 
-        Write-Log -LogText "`tSupport Start:`t`t`t$(Get-Date $arrFujitsuDeviceWarrentyInfos[5].value -Format "dd.MM.yyyy")" -LogStatus Info
+        Write-Log -LogText "`t$($uiLanguage.DeviceDataSupportStartDate):`t`t`t$(Get-Date $arrFujitsuDeviceWarrentyInfos[5].value -Format "dd.MM.yyyy")" -LogStatus Info
 
         if( (Get-Date $arrFujitsuDeviceWarrentyInfos[7].value) -gt (Get-Date)) {
-            Write-Log -LogText "`tSupport Ende:`t`t`t$(Get-Date $arrFujitsuDeviceWarrentyInfos[7].value -Format "dd.MM.yyyy")" -LogStatus Success
-            Write-Log -LogText "`tSupport Status:`t`t`tDas Produkt ist unter Support." -LogStatus Success
-            [string] $strSeviceStatus = "Das Produkt ist unter Service."
+            Write-Log -LogText "`t$($uiLanguage.DeviceDataSupportEndDate):`t`t`t$(Get-Date $arrFujitsuDeviceWarrentyInfos[7].value -Format "dd.MM.yyyy")" -LogStatus Success
+            Write-Log -LogText "`t$($uiLanguage.DeviceDataSupportStatus):`t`t`t$($uiLanguage.DeviceDataSupportStatusTextOk)" -LogStatus Success
+            [string] $strSeviceStatus = $uiLanguage.DeviceDataSupportStatusTextOk
         }
         else {
-            Write-Log -LogText "`tSupport Ende:`t`t`t$(Get-Date $arrFujitsuDeviceWarrentyInfos[7].value -Format "dd.MM.yyyy")" -LogStatus Error
-            Write-Log -LogText "`tSupport Status:`t`t`tDas Produkt hat keinen Support mehr." -LogStatus Error
-            [string] $strSeviceStatus = "Das Produkt hat keinen Service mehr."
+            Write-Log -LogText "`t$($uiLanguage.DeviceDataSupportEndDate):`t`t`t$(Get-Date $arrFujitsuDeviceWarrentyInfos[7].value -Format "dd.MM.yyyy")" -LogStatus Error
+            Write-Log -LogText "`t$($uiLanguage.DeviceDataSupportStatus):`t`t`t$($uiLanguage.DeviceDataSupportStatusTextEnd)" -LogStatus Error
+            [string] $strSeviceStatus = $uiLanguage.DeviceDataSupportStatusTextEnd
         }
         
-        Write-Log -LogText "`tProdukt Support Ende:`t$([DateTime]::ParseExact( ( ($arrFujitsuDeviceWarrentyInfos[6].value).TrimEnd(" *") ), "M/dd/yyyy", $null).ToString("dd.MM.yyyy"))" -LogStatus Info
-        Write-Log -LogText "`tSupport Details:`t`t$($arrFujitsuDeviceWarrentyInfos[8].value)" -LogStatus Info
-        Write-Log -LogText "`tGarantie Gruppe:`t`t$($arrFujitsuDeviceWarrentyInfos[9].value)" -LogStatus Info
-        Write-Log -LogText "`tSupport Offering Gruppe:$($arrFujitsuDeviceWarrentyInfos[10].value)" -LogStatus Info
-        Write-Log -LogText "`tBestellnummer:`t`t`t$($arrFujitsuDeviceWarrentyInfos[11].value)" -LogStatus Info -Absatz
+        Write-Log -LogText "`t$($uiLanguage.DeviceDataProductSupportEndDate):`t`t$([DateTime]::ParseExact( ( ($arrFujitsuDeviceWarrentyInfos[6].value).TrimEnd(" *") ), "M/dd/yyyy", $null).ToString("dd.MM.yyyy"))" -LogStatus Info
+        Write-Log -LogText "`t$($uiLanguage.DeviceDataProductSupportDetails):`t`t$($arrFujitsuDeviceWarrentyInfos[8].value)" -LogStatus Info
+        Write-Log -LogText "`t$($uiLanguage.DeviceDataProductWarrentyGroup):`t`t$($arrFujitsuDeviceWarrentyInfos[9].value)" -LogStatus Info
+        Write-Log -LogText "`t$($uiLanguage.DeviceDataProductSupportOfferingGroup):`t$($arrFujitsuDeviceWarrentyInfos[10].value)" -LogStatus Info
+        Write-Log -LogText "`t$($uiLanguage.DeviceDataProductOrderNumber):`t`t`t$($arrFujitsuDeviceWarrentyInfos[11].value)" -LogStatus Info -Absatz
 
 
-        # Falls der Parameter "csv" angegeben wurde, wird der jeweilige Datenssatz hinzugefügt.
+        # If the "csv" parameter is specified, the data record is added.
         if ($csv) {
-            Write-Log -LogText "`Schreibe die Daten in die CSV Datei '$strCsvFileName'." -LogStatus Info -Absatz
+            Write-Log -LogText "$($uiLanguage.CsvFileCreateInfo) '$strCsvFileName'." -LogStatus Info -Absatz
             Add-Content -Path "$strCsvFile" -Value "`"$($arrFujitsuDeviceWarrentyInfos[0].value)`";`"$($arrFujitsuDeviceWarrentyInfos[1].value)`";`"$($arrFujitsuDeviceWarrentyInfos[2].value)`";`"$($arrFujitsuDeviceWarrentyInfos[3].value)`";`"$($arrFujitsuDeviceWarrentyInfos[4].value)`";`"$(Get-Date $arrFujitsuDeviceWarrentyInfos[5].value -Format "dd.MM.yyyy")`";`"$(Get-Date $arrFujitsuDeviceWarrentyInfos[7].value -Format "dd.MM.yyyy")`";`"$([DateTime]::ParseExact($arrFujitsuDeviceWarrentyInfos[6].value, "M/dd/yyyy", $null).ToString("dd.MM.yyyy"))`";`"$($arrFujitsuDeviceWarrentyInfos[8].value)`";`"$($arrFujitsuDeviceWarrentyInfos[9].value)`";`"$($arrFujitsuDeviceWarrentyInfos[10].value)`";`"$($arrFujitsuDeviceWarrentyInfos[11].value)`"" -Encoding UTF8
         }
     }
     else {
-        Write-Log -LogText "Die Seriennummer '$sn' ist ungültig!" -LogStatus Error
+        Write-Log -LogText $uiLanguage.CheckSerialInfoError -LogStatus Error
     }
 }
 
-
-# Falls der Parameter "interactive" angegeben wurde, wird das Skript am Ende pausiert.
+# If the parameter "interactive" is specified, the script will be paused at the end.
 if ($interactive) {
     pause
 }
