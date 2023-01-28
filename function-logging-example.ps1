@@ -17,7 +17,9 @@ function Write-Log {
         [ValidateNotNullOrEmpty()]
         [string] $LogText = "",
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(
+            Mandatory=$true,
+            Position=1)]
         [ValidateNotNullOrEmpty()]
         [ValidateSet('Info','Success','Warning','Error')]
         [string] $LogStatus= "Info",
@@ -34,15 +36,20 @@ function Write-Log {
     [string] $strLogFileAbsatz = ""
     [string] $strLogFileHeader = ""
 
+    if ( -not (Test-Path $strLogfilePath) ) {
+        Write-Host "Der angegebene Pfad $strLogfilePath existiert nicht!" -ForegroundColor Red
+        exit
+    }
+
     # Add a header to logfile, if the logfile not exist
     If ( -not (Test-Path $strLogfile) ) {
-        $strLogFileHeader = "$("#" * 75)`n"
+        $strLogFileHeader = "$("#" * 120)`n"
         $strLogFileHeader += "{0,-21} {1,0}" -f "# Skript:", "$($MyInvocation.ScriptName)`n"
         $strLogFileHeader += "{0,-21} {1,0}" -f "# Startzeit:", "$(Get-Date -Format "dd.MM.yyyy HH:mm:ss")`n"
         $strLogFileHeader += "{0,-21} {1,0}" -f "# Startzeit:", "$(Get-Date -Format "dd.MM.yyyy HH:mm:ss")`n"
         $strLogFileHeader += "{0,-21} {1,0}" -f "# Ausführendes Konto:", "$([Security.Principal.WindowsIdentity]::GetCurrent().Name)`n"
         $strLogFileHeader += "{0,-21} {1,0}" -f "# Computername:", "$env:COMPUTERNAME`n"
-        $strLogFileHeader += "$("#" * 75)`n"
+        $strLogFileHeader += "$("#" * 120)`n"
 
         Write-Host $strLogFileHeader
         Add-Content -Path $strLogfile -Value $strLogFileHeader -Encoding UTF8
@@ -85,12 +92,10 @@ function Write-Log {
 
 }
 
-
 #-----------------------------------------------------------[Execution]------------------------------------------------------------
 
 Write-Log -LogText "Das ist ein Test." -LogStatus Info
 Write-Log -LogText "Das ist ein Test." -LogStatus Success
 Write-Log -LogText "Das ist ein Test." -LogStatus Warning
 Write-Log -LogText "Das ist ein Test." -LogStatus Error -Absatz
-Write-Log -LogText "Das ist ein Test."
-#Write-Log -LogText ""
+Write-Log -LogText "Das ist ein Test." -LogStatus Error -EventLog
