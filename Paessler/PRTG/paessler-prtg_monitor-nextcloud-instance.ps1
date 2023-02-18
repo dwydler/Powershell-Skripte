@@ -56,6 +56,8 @@ Date                   Comment
 21.09.2019, 21:10 Uhr  Fixed variable name in Set-PrtgResult
 21.09.2019, 21:10 Uhr  Set MaxWarning to "0" for Apps with Updates 
 21.09.2019, 21:28 Uhr  Added new channels to description
+12.02.2023, 01.29 Uhr  Fixed display not more than 2 chars after comma ( cpu loads)
+
 
 .COMPONENT
 
@@ -227,6 +229,37 @@ function Set-PrtgResult {
     return $Result
 }
 
+function String-Trimming {
+	Param (
+		[Parameter(Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+		[string] $String,
+
+		[Parameter(Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+		[int] $Length
+	)
+	
+    #
+    [array] $pValue = $String -split "\."
+
+    #
+    if ($pValue[1].Length -gt $Length) {
+        
+        #
+        $pValue += $pValue[1].Substring(0,$Length)
+
+        #
+        [string] $strTrimmedString = "$($pValue[0]).$($pValue[2])"
+    }
+    else {
+        [string] $strTrimmedString = $String
+    }
+
+    return $strTrimmedString
+  
+}
+
 #------------------------------------------------------------[Modules]-------------------------------------------------------------
 
 
@@ -245,7 +278,7 @@ $ActiveSecProtoType = [System.Net.SecurityProtocolType]'Tls12'
 $obNcHeaders["OCS-APIRequest"] = "true"
 $obNcHeaders["Authorization"]="Basic $obBase64AuthInfo"
 
-
+# Excecute the api query to get all informations
 try {
     $xmlGetNCStatusPage = Invoke-WebRequest -Method GET -Headers $obNcHeaders -URI $strNcApiUrl -UseBasicParsing
 }
@@ -253,6 +286,7 @@ catch {
     Set-PrtgError -PrtgErrorText $($_.Exception.Message)
 }
 
+# Error handling / create xml structure
 if( (-not ($xmlGetNCStatusPage.ocs.meta.status -eq "ok") ) -and ( -not ($xmlGetNCStatusPage.ocs.meta.statuscode -eq "200") ) ) {
     Set-PrtgError -PrtgErrorText "Unbekannter Fehler aufgetreten!"
 }
@@ -260,10 +294,10 @@ else {
     $strXmlOutput = "<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>`n"
     $strXmlOutput += "<prtg>`n"
 
-    # output cpu load
-    $strXmlOutput += Set-PrtgResult -Channel "CPU Load Last 1min" -Value $xmlGetNCStatusPage.ocs.data.nextcloud.system.cpuload.element[0] -Unit CPU -ShowChart
-    $strXmlOutput += Set-PrtgResult -Channel "CPU Load Last 5min" -Value $xmlGetNCStatusPage.ocs.data.nextcloud.system.cpuload.element[1] -Unit CPU -ShowChart
-    $strXmlOutput += Set-PrtgResult -Channel "CPU Load Last 15min" -Value $xmlGetNCStatusPage.ocs.data.nextcloud.system.cpuload.element[2] -Unit CPU -ShowChart
+    # output cpu load 
+    $strXmlOutput += Set-PrtgResult -Channel "CPU Load Last 1min" -Value $(String-Trimming -String $xmlGetNCStatusPage.ocs.data.nextcloud.system.cpuload.element[0] -Length 2) -Unit CPU -ShowChart
+    $strXmlOutput += Set-PrtgResult -Channel "CPU Load Last 5min" -Value $(String-Trimming -String $xmlGetNCStatusPage.ocs.data.nextcloud.system.cpuload.element[1] -Length 2) -Unit CPU -ShowChart
+    $strXmlOutput += Set-PrtgResult -Channel "CPU Load Last 15min" -Value $(String-Trimming -String $xmlGetNCStatusPage.ocs.data.nextcloud.system.cpuload.element[2] -Length 2) -Unit CPU -ShowChart
     
     if ($xmlGetNCStatusPage.ocs.data.nextcloud.system.mem_total -ne "N/A") {
         $strXmlOutput += Set-PrtgResult -Channel "Memory Total" -Value ([int]::Parse($xmlGetNCStatusPage.ocs.data.nextcloud.system.mem_total) * 1024) -Unit BytesMemory -ShowChart -DecimalMode Auto
