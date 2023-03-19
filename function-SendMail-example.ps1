@@ -14,7 +14,7 @@ hier könnte ihr Text stehen.
 [string] $strEmailEmpfaenger = ""
 
 #-----------------------------------------------------------[Functions]------------------------------------------------------------
-function SendMail {
+Function SendMail {
     param (
         [Parameter(Mandatory=$True,Position=1)]
         [string] $MailServerName,
@@ -41,7 +41,7 @@ function SendMail {
         [string] $MailServerAuthUser,
 
         [Parameter(Mandatory=$False)]
-        [string] $EmailAttachments
+        [string] $EmailAttachment
     )
 
 
@@ -71,10 +71,10 @@ function SendMail {
     }
 
     # Attach Attachments
-    $oSmtpMessageAttachment = New-Object System.Net.Mail.Attachment($EmailAttachments)
-    $oSmtpMessage.Attachments.Add($oSmtpMessageAttachment)
-
-
+    if ($EmailAttachment) {
+        $oSmtpMessageAttachment = New-Object System.Net.Mail.Attachment("$EmailAttachment")
+        $oSmtpMessage.Attachments.Add($oSmtpMessageAttachment)
+    }
     # E-Mail verschicken
     try {
         Write-Host "`nE-Mail wird versendet..."
