@@ -52,21 +52,21 @@ Function SendMail {
     # (De)aktivert TLS
     $oSmtpClient.EnableSSL = $Tls
 
-    # Prüft ob ein Benutzer angegeben wurde
+    # Prüfe, ob ein Benutzer angegeben wurde
     if($MailServerAuthUser) {
         
-        # Prüft ob die Datei vorhanden ist
-        if(Test-Path .\framework.PSCredential.ps1) {
-            . .\framework.PSCredential.ps1
-            Write-Host "Die Funktion framework.PSCredential.ps1 wurde eingebunden." -ForegroundColor Green
+        # Prüfe, ob das cmdlet PSCredential geladen ist
+        if ( Get-Command Get-PSCredential -ErrorAction SilentlyContinue) {
 
+            # Output
+            Write-Host "Das cmdlet PSCredential wurde eingebunden." -ForegroundColor Green
 
-        #Prüft ob für den angegeben Credentials vorhanden sind und fragt ggf. nach dem Passwort
-        $oSmtpClient.Credentials = Get-PSCredential "$MailServerAuthUser"
-
+            #Prüft ob für den angegeben Credentials vorhanden sind und fragt ggf. nach dem Passwort
+            $oSmtpClient.Credentials = Get-PSCredential "$MailServerAuthUser"
         }
         else {
-            return Write-host "Die Datei framework.PSCredential.ps1 ist nicht vorhanden!" -ForegroundColor Red
+            return Write-host "Das cmdlet PSCredential konnte nicht gefunden werden!" -ForegroundColor Red
+            exit
         }
     }
 
