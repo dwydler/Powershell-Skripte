@@ -17,7 +17,7 @@ function WorkingDir {
     }
 
     # In das Verzeichnis wechseln
-    cd $strWorkingdir
+    Set-Location $strWorkingdir
 }
 
 Clear-Host
