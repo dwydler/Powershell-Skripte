@@ -323,11 +323,15 @@ $QueryResult = Invoke-Command -Computername $PrtgDevice -ArgumentList $timespan 
     }
 
     # Fetch informations from all inbound send connectors
-    [array] $NspinboundSendConnector = Get-NspInboundSendConnector -Type SMTP
+    [NoSpamProxy.Odata.Configuration.SendConnector] $NspinboundSendConnector = Get-NspInboundSendConnector -Type SMTP
 
-    for ($i = 0; $i -lt $NspinboundSendConnector.Count; $i ++) {
-        $aNspTlsCertificates += [pscustomobject]@{ Connectorname="$($NspinboundSendConnector[$i].Configuration.Name)"; CertNotAfter=$((Get-ChildItem "Cert:\LocalMachine\My" | `
-                                    Where-Object { $_.Thumbprint -match $NspinboundSendConnector[$i].Configuration.Dispatchers.TlsCertificateThumbprint.ToUpper() }).NotAfter) }
+    for ($i = 0; $i -lt $NspinboundSendConnector.Count; $i++) {
+
+        foreach ($smarthosts in $NspinboundSendConnector[$i].Configuration.Dispatchers) {
+
+            $aNspTlsCertificates += [pscustomobject]@{ Connectorname="$($NspinboundSendConnector[$i].Configuration.Name) - $($smarthosts.Smarthost)"; CertNotAfter=$((Get-ChildItem "Cert:\LocalMachine\My" | `
+                                    Where-Object { $_.Thumbprint -match $smarthosts.TlsCertificateThumbprint.ToUpper() }).NotAfter) }
+        }
     }
     
     $obCustomReturn | Add-Member -MemberType NoteProperty -Name "TlsCertificateNotAfter" -Value $aNspTlsCertificates
@@ -379,4 +383,3 @@ $xmlOutput += "</prtg>"
 
 # Return Xml
 $xmlOutput
-
