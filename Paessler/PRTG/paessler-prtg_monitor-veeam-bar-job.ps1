@@ -217,7 +217,7 @@ $objQueryResult = Invoke-command -ComputerName $PrtgDevice -Args $VeeamBRJobName
 
     ### Fuege das Veeam Powershell Module zu aktuellen Sitzung hinzu
     try {
-        Import-Module Veeam.Backup.PowerShell -ErrorAction Stop 
+        Import-Module Veeam.Backup.PowerShell -ErrorAction Stop
     }
     catch {
         $strErrorMessage = $_.Exception.Message
@@ -234,9 +234,7 @@ $objQueryResult = Invoke-command -ComputerName $PrtgDevice -Args $VeeamBRJobName
 
         ### Auslesen des letzten Ausfuehrungsergebnis vom dem angegebenen Veeam Backup Job
         $strVeeamBackupJobId = Get-VBRComputerBackupJob -Name $strVeeamBackupJobName | Select -ExpandProperty Id
-        
-        $aVBRSession = Get-VBRComputerBackupJobSession
-        $obVBRSession = $aVBRSession | Where-Object { $_.JobId -eq $strVeeamBackupJobId } | Sort -Descending -Property "CreationTime" | Select -First 1
+        $obVBRSession = Get-VBRComputerBackupJobSession | Where-Object { $_.JobId -eq $strVeeamBackupJobId } | Sort -Descending -Property "CreationTime" | Select -First 1
     }
 
     # Ueberpruefung, ob es bei dem Jobname um ein Backup & Replication Entpoint Objekt handelt.
@@ -249,8 +247,7 @@ $objQueryResult = Invoke-command -ComputerName $PrtgDevice -Args $VeeamBRJobName
     elseif (Get-VBRJob -Name $strVeeamBackupJobName  -ErrorAction SilentlyContinue) {
 
         ### Auslesen des letzten Ausfuehrungsergebnis vom dem angegebenen Veeam Backup Job
-        $strVeeamBackupJobId = Get-VBRJob -Name $strVeeamBackupJobName | Select -ExpandProperty Id
-        $obVBRSession = Get-VBRBackupSession | Where-Object { $_.JobId -eq $strVeeamBackupJobId } | Sort -Descending -Property "CreationTime" | Select -First 1
+        $obVBRSession = Get-VBRBackupSession | Where-Object { $_.JobName -like "$($strVeeamBackupJobName)\*" } | Sort -Descending -Property "CreationTime" | Select -First 1
     }
 
 	### Ueberpruefung, ob es bei dem Jobname um ein Backup & Replication Tape Objekt handelt.
@@ -258,9 +255,7 @@ $objQueryResult = Invoke-command -ComputerName $PrtgDevice -Args $VeeamBRJobName
 
 		### Auslesen des letzten Ausfuehrungsergebnis vom dem angegebenen Veeam Backup Job
 		$strVeeamBackupJobId = Get-VBRTapeJob -Name $strVeeamBackupJobName | Select -ExpandProperty Id
-		#Get-VBRTapeBackup nicht mehr nutzen -> WARNUNG: This cmdlet is obsolete and no longer supported
-		#See: https://helpcenter.veeam.com/docs/backup/powershell/get-vbrtapebackup.html?ver=110
-		$obVBRSession = [veeam.backup.core.cbackupsession]::GetByJob($strVeeamBackupJobId) | Sort CreationTime -Descending | select -First 1
+        $obVBRSession = Get-VBRBackupSession | Where-Object { $_.JobId -eq $strVeeamBackupJobId } | Sort -Descending -Property "CreationTime" | Select -First 1
 	}
     ### If no previous condition matched
     else {
