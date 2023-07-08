@@ -233,29 +233,29 @@ $objQueryResult = Invoke-command -ComputerName $PrtgDevice -Args $VeeamBRJobName
     if (Get-VBRComputerBackupJob -Name $strVeeamBackupJobName  -ErrorAction SilentlyContinue) {
 
         ### Auslesen des letzten Ausfuehrungsergebnis vom dem angegebenen Veeam Backup Job
-        $strVeeamBackupJobId = Get-VBRComputerBackupJob -Name $strVeeamBackupJobName | Select -ExpandProperty Id
-        $obVBRSession = Get-VBRComputerBackupJobSession | Where-Object { $_.JobId -eq $strVeeamBackupJobId } | Sort -Descending -Property "CreationTime" | Select -First 1
+        $strVeeamBackupJobId = Get-VBRComputerBackupJob -Name $strVeeamBackupJobName | Select-Object -ExpandProperty Id
+        $obVBRSession = Get-VBRComputerBackupJobSession | Where-Object { $_.JobId -eq $strVeeamBackupJobId } | Sort-Object -Descending -Property "CreationTime" | Select-Object -First 1
     }
 
     # Ueberpruefung, ob es bei dem Jobname um ein Backup & Replication Entpoint Objekt handelt.
     elseif (Get-VBREPJob -Name $strVeeamBackupJobName -ErrorAction SilentlyContinue) {
-        $strVeeamBackupJobId = Get-VBREPJob -Name $strVeeamBackupJobName | Select -ExpandProperty Id
-        $obVBRSession = Get-VBREPSession | Where-Object { $_.JobId -eq $strVeeamBackupJobId } | Sort -Descending -Property "CreationTime" | Select -First 1
+        $strVeeamBackupJobId = Get-VBREPJob -Name $strVeeamBackupJobName | Select-Object -ExpandProperty Id
+        $obVBRSession = Get-VBREPSession | Where-Object { $_.JobId -eq $strVeeamBackupJobId } | Sort-Object -Descending -Property "CreationTime" | Select-Object -First 1
     }
 
     ### Ueberpruefung, ob es bei dem Jobname um ein Backup & Replication Objekt handelt.
     elseif (Get-VBRJob -Name $strVeeamBackupJobName  -ErrorAction SilentlyContinue) {
 
         ### Auslesen des letzten Ausfuehrungsergebnis vom dem angegebenen Veeam Backup Job
-        $obVBRSession = Get-VBRBackupSession | Where-Object { $_.JobName -like "$($strVeeamBackupJobName)\*" } | Sort -Descending -Property "CreationTime" | Select -First 1
+        $obVBRSession = Get-VBRBackupSession | Where-Object { $_.JobName -like "$($strVeeamBackupJobName)\*" } | Sort-Object -Descending -Property "CreationTime" | Select-Object -First 1
     }
 
 	### Ueberpruefung, ob es bei dem Jobname um ein Backup & Replication Tape Objekt handelt.
 	elseif (Get-VBRTapeJob -Name $strVeeamBackupJobName -ErrorAction SilentlyContinue) {
 
 		### Auslesen des letzten Ausfuehrungsergebnis vom dem angegebenen Veeam Backup Job
-		$strVeeamBackupJobId = Get-VBRTapeJob -Name $strVeeamBackupJobName | Select -ExpandProperty Id
-        $obVBRSession = Get-VBRBackupSession | Where-Object { $_.JobId -eq $strVeeamBackupJobId } | Sort -Descending -Property "CreationTime" | Select -First 1
+		$strVeeamBackupJobId = Get-VBRTapeJob -Name $strVeeamBackupJobName | Select-Object -ExpandProperty Id
+        $obVBRSession = Get-VBRBackupSession | Where-Object { $_.JobId -eq $strVeeamBackupJobId } | Sort-Object -Descending -Property "CreationTime" | Select-Object -First 1
 	}
     ### If no previous condition matched
     else {
