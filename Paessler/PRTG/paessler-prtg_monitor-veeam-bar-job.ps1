@@ -22,29 +22,9 @@ Output exit code and a description
  
 .NOTES
 File:           paessler-prtg_monitor-veeam-bar-job.ps1
-Version:        1.3
 Author:         Daniel Wydler
 Creation Date:  10.03.2019, 10:54 Uhr
-Purpose/Change:
- 
-Date                   Comment
------------------------------------------------
-10.03.2019, 10:54 Uhr  Initial community release
-18.09.2019, 21:39 Uhr  Code base revised
-19.09.2019, 00:11 Uhr  Added informations to the header
-27.09.2019, 09:49 Uhr  Fixed query of JobId
-31.01.2021, 12:19 Uhr  Added parameter to Set-PrtgResult
-31.01.2021, 13:45 Uhr  Fixed if query in Set-PrtgResult
-31.01.2021, 17:23 Uhr  Code base revised
-27.03.2021, 19:45 Uhr  Added Connection test for remote computer
-27.03.2021, 20:03 Uhr  Fixed error handling in Invoke-Command
-27.03.2021, 20:22 Uhr  Fixed query for computer backup jobs
-28.03.2021, 18;44 Uhr  Fixed query for computer backup jobs
-28.03.2021, 18:54 Uhr  Fixed evaluation of job status
-06.01.2022, 16:33 Uhr  Changed Veeam PsSnapIn to Import-Module
-28.03.2022, 11:20 Uhr  Added Support for Tape Jobs (Thanks to offline4ever)
-28.03.2022, 11:21 Uhr  Fixed Dashes
-28.03.2022, 11:28 Uhr  Rename file name of the script
+
 
 .COMPONENT
 Veeam Backup & Replication Powershell-Module
