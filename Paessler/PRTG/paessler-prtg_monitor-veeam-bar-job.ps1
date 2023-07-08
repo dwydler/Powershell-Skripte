@@ -210,7 +210,6 @@ $objQueryResult = Invoke-command -ComputerName $PrtgDevice -Args $VeeamBRJobName
         [string] $strVeeamBackupJobName
     )
 
-    [array] $aVBRSession=@()
     [string] $strErrorMessage = $null
     [string] $strTrace = $null
     
