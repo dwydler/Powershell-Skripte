@@ -1,2 +1,4 @@
 Fujitsu/FujitsuWarrantyStatusChecker/*.csv
 Fujitsu/FujitsuWarrantyStatusChecker/*.log
+NoSpamProxy/Set-CertificatePermissions/*.log
+NoSpamProxy/Set-CertificatePermissions/todo.txt
