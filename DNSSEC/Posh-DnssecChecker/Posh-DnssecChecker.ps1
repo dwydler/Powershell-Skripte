@@ -101,7 +101,7 @@ Write-Log -LogText "Using follow DNS server: $strDnsServer" -LogStatus Info -Abs
 ### Check if a dns zone for the given domain exist
 Write-Log -LogText "Query informations to the given domain. Please wait..." -LogStatus Info
 try {
-    Resolve-DnsName -Name $strDomain | Out-Null
+    Resolve-DnsName -Name $strDomain -Server $strDnsServer -DnsOnly | Out-Null
     Write-Log -LogText "The dns zone for the given domain are found." -LogStatus Success -Absatz
 }
 catch {
