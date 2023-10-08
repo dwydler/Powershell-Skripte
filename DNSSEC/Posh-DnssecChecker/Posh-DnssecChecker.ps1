@@ -1,6 +1,6 @@
 ﻿<#
 .SYNOPSIS
-Dieses Skript installiert bzw. aktualisiert Mozilla Firefox auf dem aussführenden Server.
+This scripts quey differents informationen for the given DNS name from specified DNS server.
 
 Daniel Wydler
 
@@ -11,25 +11,26 @@ RISK OF THE USE OR THE RESULTS FROM THE USE OF THIS CODE REMAINS WITH THE USER.
 
  
 .INPUTS
-None
+strDomain: DNS name to be queried
+strDnsServer: DNS server which should be used for the queries
  
 .OUTPUTS
-Ausgabe der verschiedenen Prüfroutinen (z.B. Verzeichnis vorhanden, Start des Scan, Ergebnis des Scans, etc.).
+Display different informations to the given DNS name (MX-, A-, PTR-, NS-, TLSA-Records )
 
  
 .NOTES
-File:           Posh-MozillaFirefoxUpdateScript.ps1
+File:           Posh-DnssecChecker.ps1
 Author:         Daniel Wydler
-Creation Date:  17.05.2023 Uhr
+Creation Date:  08.10.2023
 
 .COMPONENT
 None
 
 .LINK
-None
+https://codeberg.org/wd/Powershell-Skripte/src/branch/master/DNSSEC/Posh-DnssecChecker
 
 .EXAMPLE
-.\Posh-MozillaFirefoxUpdateScript.ps1
+.\Posh-DnssecChecker.ps1
 
 #>
 
@@ -50,9 +51,7 @@ Clear-Host
 
 ### Variables for this script
 [string] $strDomain = ""
-[string] $strDnsServer = Get-NetAdapter | Where-Object { $_.Status -eq "Up" } | Select-Object -ExpandProperty ifIndex | Get-DnsClientServerAddress | Select-Object -ExpandProperty ServerAddresses
-
-$QueryResultRrsig = $null
+[string] $strDnsServer = ""
 
 [array] $aDnsQueryDnsRecordAs = @()
 [array] $aDnsQueryDnsRecordPtrs = @()
@@ -79,8 +78,12 @@ $error.Clear()
 # Changes to the directory in which the PowerShell script is located
 Set-WorkingDir
 
+# Read out the dns servers of the network card of the client
+$strDnsServer = Get-NetAdapter | Where-Object { $_.Status -eq "Up" } | Select-Object -ExpandProperty ifIndex | Get-DnsClientServerAddress | Select-Object -ExpandProperty ServerAddresses
 
-### Query the DNS Domain which should be checked
+
+# Query the DNS Domain which should be checked
+#region
 do {
     $strDomain = Read-Host -Prompt "Please enter a domain (e.g. google.de) to be checked"
 }
@@ -112,7 +115,7 @@ catch {
     Pause
     exit 1
 }
-
+#endregion
 
 ### DNSSEC Check
 Write-Log -LogText "Checking if the $($strDomain) is signed." -LogStatus Info
@@ -134,6 +137,7 @@ catch {
 
 
 # Query dns informations
+#region
 $objDnsQueryDnsRecordMx = Resolve-DnsName -Name $strDomain -Type MX -Server $strDnsServer
 
 ### Display informations about MX records
@@ -213,6 +217,7 @@ else {
     
 }
 Write-Log -LogText "------------------------------------------------------------------------" -LogStatus Info -Absatz
+#endregion
 
 # End
 Write-Log -LogText "Das Skript ist am Ende angekommen." -LogStatus Info
