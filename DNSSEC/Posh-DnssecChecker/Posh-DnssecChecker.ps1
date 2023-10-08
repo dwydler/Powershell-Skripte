@@ -105,7 +105,11 @@ try {
     Write-Log -LogText "The dns zone for the given domain are found." -LogStatus Success -Absatz
 }
 catch {
+    # Display informations 
     Write-Log -LogText "$($error[0].Exception.Message)." -LogStatus Error -Absatz
+    
+    #
+    Pause
     exit 1
 }
 
