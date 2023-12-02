@@ -44,7 +44,7 @@ Clear-Host
 #----------------------------------------------------------[Declarations]----------------------------------------------------------
 
 ### function Write-Log
-[string] $strLogfilePath = $(Get-Location).Path
+[string] $strLogfilePath = "$((Get-Location).Path)\Logs"
 [string] $strLogfileDate = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
 [string] $strLogfileNamePrefix = "Log_"
 [string] $strLogfileName = $($strLogfileNamePrefix + $strLogfileDate + ".log")
