@@ -272,7 +272,7 @@ $ActiveSecProtoType = [System.Net.SecurityProtocolType]'Tls12'
 #[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
 
 #
-[string] $strNcApiUrl = "https://$NCurl/ocs/v2.php/apps/serverinfo/api/v1/info"
+[string] $strNcApiUrl = "https://$NCurl/ocs/v2.php/apps/serverinfo/api/v1/info?skipApps=false&skipUpdate=false"
 [System.Object] $obBase64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($NcUsername+":"+$NcPassword))
 
 $obNcHeaders["OCS-APIRequest"] = "true"
