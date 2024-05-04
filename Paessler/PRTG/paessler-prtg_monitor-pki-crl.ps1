@@ -204,8 +204,8 @@ function Set-PrtgResult {
 
 # Überprüfe, ob eine gültige FQDN übergeben wurde.
 # https://gist.github.com/mambru82/5b7def452c621786229b2d2535bfa0ee
-# https://regex101.com/r/JAX4an/1
-if (-not ($CrlUrl -match "^(http:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.\(\)-]*)*\/?$") ) {
+# https://regex101.com/r/eabm1Y/1
+if (-not ($CrlUrl -match "^(http:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.\(\)+-]*)\/?$") ) {
     Set-PrtgError "Internetadresse der CRL nicht korrekt!"
 }
 
