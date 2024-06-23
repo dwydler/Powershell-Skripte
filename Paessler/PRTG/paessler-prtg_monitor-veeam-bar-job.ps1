@@ -246,7 +246,7 @@ $objQueryResult = Invoke-command -ComputerName $PrtgDevice -Args $VeeamBRJobName
     elseif (Get-VBRJob -Name $strVeeamBackupJobName  -ErrorAction SilentlyContinue) {
 
         ### Auslesen des letzten Ausfuehrungsergebnis vom dem angegebenen Veeam Backup Job
-        $obVBRSession = Get-VBRBackupSession | Where-Object { $_.JobName -like "$($strVeeamBackupJobName)\*" } | Sort-Object -Descending -Property "CreationTime" | Select-Object -First 1
+        $obVBRSession = Get-VBRBackupSession | Where-Object { $_.JobName -match "$strVeeamBackupJobName" } | Sort-Object -Descending -Property "CreationTime" | Select-Object -First 1
     }
 
 	### Ueberpruefung, ob es bei dem Jobname um ein Backup & Replication Tape Objekt handelt.
