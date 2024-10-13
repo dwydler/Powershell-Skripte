@@ -62,6 +62,7 @@ function global:Get-PSCredential {
 			throw "Content of Credential file $PSCredentialFile is not valid. Please delete the file and run the script again."		
 		}
 		
+		# Returns the values of the object
 		Write-Output $PSCredential
 	}
 
@@ -99,6 +100,7 @@ function global:Get-PSCredential {
 			throw "Password is empty. This is not allowed for security reasons."
 		}
 	
+		# Assign values to each variable
 		$UserDomain				= $PSCredential.GetNetworkCredential().Domain
 		$PSCredentialSubPath	= "$PSCredentialStorePath\$UserDomain"
 		$PSCredentialFile		= "$PSCredentialStorePath\$($PSCredential.UserName).$PSCredentialFileSuffix"
@@ -114,9 +116,11 @@ function global:Get-PSCredential {
 		
 		$HashTable | Export-Clixml $PSCredentialFile
 
+		# Returns the values of the object
 		Write-Output $PSCredential
 	}
 
+	# Assign values to each variable
 	$PSCredentialFileSuffix	= "PSCredential"
 	$PSCredentialStorePath	= ".\PSCredentials"
 
@@ -132,5 +136,6 @@ function global:Get-PSCredential {
 		$PSCredential = New-PSCredential $UserName $PSCredentialStorePath $PSCredentialFileSuffix
 	}
 
+	# Returns the values of the object
 	Write-Output $PSCredential
 }
