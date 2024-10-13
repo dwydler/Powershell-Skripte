@@ -1,8 +1,7 @@
 #Requires -Version 2.0
 Set-StrictMode -Version Latest
 
-Function global:Get-PSCredential 
-{
+function global:Get-PSCredential {
 
 <#
 .SYNOPSIS
@@ -44,82 +43,73 @@ Function global:Get-PSCredential
 	[CmdletBinding()]
 	Param(
 		[Parameter(ValueFromPipeline=$True)]
-		[String]$UserName
+		[string] $UserName
 	)
 
-	Function Import-PSCredential
-	{
+	function Import-PSCredential {
 		[CmdletBinding()]
 		Param(
 			[Parameter(Mandatory=$True)]
 			[ValidateNotNullOrEmpty()]
-			[String]$PSCredentialFile
+			[string] $PSCredentialFile
 		)
 
-		Try 
-		{
+		try {
 			$HashTable		= Import-Clixml $PSCredentialFile
 			$PSCredential	= New-Object System.Management.Automation.PSCredential $HashTable.UserName, $($HashTable.Password | ConvertTo-SecureString)
 		} 
-		Catch 
-		{
-			Throw "Content of Credential file $PSCredentialFile is not valid. Please delete the file and run the script again."
+		catch {
+			throw "Content of Credential file $PSCredentialFile is not valid. Please delete the file and run the script again."		
 		}
+		
 		Write-Output $PSCredential
 	}
 
 
-	Function New-PSCredential
-	{
+	function New-PSCredential {
 		[CmdletBinding()]
 		Param(
 			[Parameter(Mandatory=$True)]
 			[AllowEmptyString()]
-			[String]$PSCredentialFile,
+			[string] $PSCredentialFile,
 			
 			[Parameter(Mandatory=$True)]
 			[ValidateNotNullOrEmpty()]
-			[String]$PSCredentialStorePath,
+			[string] $PSCredentialStorePath,
 
 			[Parameter(Mandatory=$True)]
 			[ValidateNotNullOrEmpty()]
-			[String]$PSCredentialFileSuffix
+			[string] $PSCredentialFileSuffix
 		)
 
-		Try 
-		{
+		try {
 			$PSCredential = Get-Credential $UserName -ErrorAction Stop
 		}
-		Catch 
-		{
-			Throw "Get-Credential was canceled by the user."
+		catch {
+			throw "Get-Credential was canceled by the user."
 		}
 
-		Try
-		{
+		try {
 			$HashTable = @{
-							UserName = $PSCredential.UserName;
-							Password = $PSCredential.Password | ConvertFrom-SecureString
+				UserName = $PSCredential.UserName;
+				Password = $PSCredential.Password | ConvertFrom-SecureString
 			}
 		}
-		Catch
-		{
-			Throw "Password is empty. This is not allowed for security reasons."
+		catch {
+			throw "Password is empty. This is not allowed for security reasons."
 		}
 	
 		$UserDomain				= $PSCredential.GetNetworkCredential().Domain
 		$PSCredentialSubPath	= "$PSCredentialStorePath\$UserDomain"
 		$PSCredentialFile		= "$PSCredentialStorePath\$($PSCredential.UserName).$PSCredentialFileSuffix"
 		
-		If ((Test-Path $PSCredentialSubPath) -eq $False)
-		{ 
+		if ((Test-Path $PSCredentialSubPath) -eq $False) { 
 			New-Item $PSCredentialSubPath -type directory | Out-Null 
 		}
 
 		# Corrects PowerShell 2.0 issue with Get-Content: UserName starts with "\" if no domain is given
-		If ($PSCredential.GetNetworkCredential().Domain -eq "")
-		{
-		$HashTable.UserName = $HashTable.UserName.Split("\")[-1]
+		if ($PSCredential.GetNetworkCredential().Domain -eq "") {
+			$HashTable.UserName = $HashTable.UserName.Split("\")[-1]
 		}
 		
 		$HashTable | Export-Clixml $PSCredentialFile
@@ -127,21 +117,18 @@ Function global:Get-PSCredential
 		Write-Output $PSCredential
 	}
 
-	
 	$PSCredentialFileSuffix	= "PSCredential"
 	$PSCredentialStorePath	= ".\PSCredentials"
-	If ((Test-Path $PSCredentialStorePath) -eq $False)
-	{
+
+	if ((Test-Path $PSCredentialStorePath) -eq $False) {
 		New-Item $PSCredentialStorePath -type Directory | Out-Null
 	}
 
 	$PSCredentialFile = "$PSCredentialStorePath\$UserName.$PSCredentialFileSuffix"
-	If ((Test-Path $PSCredentialFile) -eq $True) 
-	{
+	if ((Test-Path $PSCredentialFile) -eq $True)  {
 		$PSCredential = Import-PSCredential $PSCredentialFile
 	} 
-	Else 
-	{
+	else {
 		$PSCredential = New-PSCredential $UserName $PSCredentialStorePath $PSCredentialFileSuffix
 	}
 
