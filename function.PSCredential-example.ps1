@@ -122,7 +122,7 @@ function global:Get-PSCredential {
 
 	# Assign values to each variable
 	$PSCredentialFileSuffix	= "PSCredential"
-	$PSCredentialStorePath	= ".\PSCredentials"
+	$PSCredentialStorePath	= ".\PSCredentials\$($env:username)"
 
 	if ((Test-Path $PSCredentialStorePath) -eq $False) {
 		New-Item $PSCredentialStorePath -type Directory | Out-Null
