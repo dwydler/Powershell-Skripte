@@ -75,12 +75,13 @@ function Set-PrtgError {
         [string]$PrtgErrorText
     )
     
+    # Generate PRTG sensor result output
     $strXmlOutput = "<prtg>`n"
     $strXmlOutput += "`t<error>1</error>`n"
     $strXmlOutput += "`t<text>$PrtgErrorText</text>`n"
     $strXmlOutput += "</prtg>"
 
-    # Output Xml
+    # Output the contents of the variable
     $strXmlOutput
 
     exit
@@ -205,7 +206,7 @@ If (-not (Test-NetConnection $PrtgDevice -port 5985 -InformationLevel Quiet)) {
 ### The following commands will be executed on the remote computer
 $objQueryResult = Invoke-command -ComputerName $PrtgDevice -Args $VeeamBRJobName -ScriptBlock {
 
-    ### Declarations
+    # Declarations
     param(
         [string] $strVeeamBackupJobName
     )
@@ -214,7 +215,7 @@ $objQueryResult = Invoke-command -ComputerName $PrtgDevice -Args $VeeamBRJobName
     [string] $strTrace = $null
     
 
-    ### Fuege das Veeam Powershell Module zu aktuellen Sitzung hinzu
+    # Add the Veeam Powershell Module to the current session
     try {
         Import-Module Veeam.Backup.PowerShell -ErrorAction Stop
     }
@@ -228,45 +229,52 @@ $objQueryResult = Invoke-command -ComputerName $PrtgDevice -Args $VeeamBRJobName
         return $objReturnData
     }
 
-    ### Ueberpruefung, ob es bei dem Jobname um ein Computer Backup Objekt handelt.
+    # Check if the job name is a Computer Backup object.
     if (Get-VBRComputerBackupJob -Name $strVeeamBackupJobName  -ErrorAction SilentlyContinue) {
 
-        ### Auslesen des letzten Ausfuehrungsergebnis vom dem angegebenen Veeam Backup Job
+        # Read the last execution result of the specified Veeam backup job
         $strVeeamBackupJobId = Get-VBRComputerBackupJob -Name $strVeeamBackupJobName | Select-Object -ExpandProperty Id
         $obVBRSession = Get-VBRComputerBackupJobSession | Where-Object { $_.JobId -eq $strVeeamBackupJobId } | Sort-Object -Descending -Property "CreationTime" | Select-Object -First 1
     }
 
-    # Ueberpruefung, ob es bei dem Jobname um ein Backup & Replication Entpoint Objekt handelt.
+    # Check if the job name is a Backup & Replication Entpoint object.
     elseif (Get-VBREPJob -Name $strVeeamBackupJobName -ErrorAction SilentlyContinue) {
+
+        # Read the last execution result of the specified Veeam backup job
         $strVeeamBackupJobId = Get-VBREPJob -Name $strVeeamBackupJobName | Select-Object -ExpandProperty Id
         $obVBRSession = Get-VBREPSession | Where-Object { $_.JobId -eq $strVeeamBackupJobId } | Sort-Object -Descending -Property "CreationTime" | Select-Object -First 1
     }
 
-    ### Ueberpruefung, ob es bei dem Jobname um ein Backup & Replication Objekt handelt.
+    # Check if the job name is a Backup & Replication object.
     elseif (Get-VBRJob -Name $strVeeamBackupJobName  -ErrorAction SilentlyContinue) {
 
-        ### Auslesen des letzten Ausfuehrungsergebnis vom dem angegebenen Veeam Backup Job
+        # Read the last execution result of the specified Veeam backup job
         $obVBRSession = Get-VBRBackupSession | Where-Object { $_.JobName -match "$strVeeamBackupJobName" } | Sort-Object -Descending -Property "CreationTime" | Select-Object -First 1
     }
 
-	### Ueberpruefung, ob es bei dem Jobname um ein Backup & Replication Tape Objekt handelt.
+	# Check if the job name is a Backup & Replication Tape object
 	elseif (Get-VBRTapeJob -Name $strVeeamBackupJobName -ErrorAction SilentlyContinue) {
 
-		### Auslesen des letzten Ausfuehrungsergebnis vom dem angegebenen Veeam Backup Job
+		# Read the last execution result of the specified Veeam backup job
 		$strVeeamBackupJobId = Get-VBRTapeJob -Name $strVeeamBackupJobName | Select-Object -ExpandProperty Id
         $obVBRSession = Get-VBRBackupSession | Where-Object { $_.JobId -eq $strVeeamBackupJobId } | Sort-Object -Descending -Property "CreationTime" | Select-Object -First 1
 	}
-    ### If no previous condition matched
+    # Matches if all previous queries have failed
     else {
+
+        # Save text of the error message in the variable
         $strErrorMessage = "Keinen Veeam Job mit dem Namen `"$strVeeamBackupJobName`" gefunden!"
 
+        # Create a data object
         $objReturnData = "" | Select-Object -Property strErrorMessage, strTrace
         $objReturnData.strErrorMessage = $strErrorMessage
         $objReturnData.strTrace = $strTrace
         
+        # Return the content of the variable to the main program
         return $objReturnData
     }
 
+    # Create a data object with the relevant data of the Veeam job
 	$obCustomReturn = New-Object -TypeName System.Object
 	$obCustomReturn | Add-Member -MemberType NoteProperty -Name "Result" -Value $obVBRSession.Result.ToString()
 	$obCustomReturn | Add-Member -MemberType NoteProperty -Name "AuxData" -Value $obVBRSession.AuxData
@@ -278,7 +286,7 @@ $objQueryResult = Invoke-command -ComputerName $PrtgDevice -Args $VeeamBRJobName
 		$obCustomReturn | Add-Member -MemberType NoteProperty -Name "BackupSize" -Value $obVBRSession.SessionInfo.BackedUpSize
 	}
 	
-    ###
+    # Return the content of the variable to the main program
     return $obCustomReturn
 }
 
@@ -286,11 +294,13 @@ $objQueryResult = Invoke-command -ComputerName $PrtgDevice -Args $VeeamBRJobName
 ### If an error occurred set prtg sensor to error state
 ### Else no error occurred the return values will be processed
 If($objQueryResult.strErrorMessage) {
+
+    # Change the sensor status to error and output a custom error message
     Set-PrtgError $objQueryResult.strErrorMessage
 }
 else {
    
-    ###
+    # Evaluating the status of the job and converting it into the respective PRTG sensor statues
     switch ($objQueryResult.Result) {            
             
         "Success" { $intVeeamBackupJobResult = 0 }
@@ -301,10 +311,10 @@ else {
         Default   { $intVeeamBackupJobResult = 1 }           
     } 
 
-    ### Metadata des Veeam Backup Jobs in eine Variable einlesen
+    # Assign metadata of the Veeam backup job to the variable
     [xml] $xmlVeeamBackupJobAuxDetails = $objQueryResult.AuxData
 
-    ### Generate PRTG Output
+    # Generate PRTG sensor result output
     $xmlOutput = "<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>`n"
     $xmlOutput += "<prtg>`n"
 
@@ -335,6 +345,6 @@ else {
     }
     $xmlOutput += "</prtg>"
 
-    ### Return Xml
+    # Output the contents of the variable
     $xmlOutput
 }
