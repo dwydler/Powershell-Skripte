@@ -322,9 +322,9 @@ else {
     $xmlOutput += Set-PrtgResult -Channel "Job Result" -Value $intVeeamBackupJobResult -Unit Count -ShowChart -WarnMsg "Job wurde mit Warnungen ausgefuehrt." -ErrorMsg "Job wurde mit Fehler ausgefuehrt." -MaxWarn 0 -MaxError 1
 
     if ($objQueryResult.EndTime -and $objQueryResult.CreationTime) {
-    $xmlOutput += Set-PrtgResult -Channel "LaufzeitHour" -Value $( ($objQueryResult.EndTime - $objQueryResult.CreationTime).Hours)  -CustomUnit "Std." -ShowChart
-    $xmlOutput += Set-PrtgResult -Channel "LaufzeitMinutes" -Value $( ($objQueryResult.EndTime - $objQueryResult.CreationTime).Minutes)  -CustomUnit "Min." -ShowChart
-    $xmlOutput += Set-PrtgResult -Channel "LaufzeitSeconds" -Value $( ($objQueryResult.EndTime - $objQueryResult.CreationTime).Seconds)  -CustomUnit "Sek." -ShowChart
+        $xmlOutput += Set-PrtgResult -Channel "LaufzeitHour" -Value $( ($objQueryResult.EndTime - $objQueryResult.CreationTime).Hours)  -CustomUnit "Std." -ShowChart
+        $xmlOutput += Set-PrtgResult -Channel "LaufzeitMinutes" -Value $( ($objQueryResult.EndTime - $objQueryResult.CreationTime).Minutes)  -CustomUnit "Min." -ShowChart
+        $xmlOutput += Set-PrtgResult -Channel "LaufzeitSeconds" -Value $( ($objQueryResult.EndTime - $objQueryResult.CreationTime).Seconds)  -CustomUnit "Sek." -ShowChart
     }
     if ($objQueryResult.BackupSize) {
         $xmlOutput += Set-PrtgResult -Channel "Job BackupSize" -Value ($objQueryResult.BackupSize) -VolumeSize GigaByte -ShowChart -DecimalMode "Auto"
