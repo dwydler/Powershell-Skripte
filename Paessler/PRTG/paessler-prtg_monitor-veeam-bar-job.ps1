@@ -285,6 +285,7 @@ try {
         
         # Return the content of the variable to the main program
         return $obCustomReturn
+
     } -ErrorAction Stop
 }
 ### If the target server cannot be connected (wrong DNS name, wrong username/password, insufficient permissions), the respective error message is displayed.
