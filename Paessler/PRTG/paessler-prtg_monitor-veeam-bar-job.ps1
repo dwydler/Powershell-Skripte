@@ -269,18 +269,34 @@ try {
             return $objReturnData
         }
 
-        # Create a data object with the relevant data of the Veeam job
-        $obCustomReturn = New-Object -TypeName System.Object
-        $obCustomReturn | Add-Member -MemberType NoteProperty -Name "Result" -Value $obVBRSession.Result.ToString()
-        $obCustomReturn | Add-Member -MemberType NoteProperty -Name "AuxData" -Value $obVBRSession.AuxData
-        $obCustomReturn | Add-Member -MemberType NoteProperty -Name "CreationTime" -Value $obVBRSession.CreationTime
-        $obCustomReturn | Add-Member -MemberType NoteProperty -Name "EndTime" -Value $obVBRSession.EndTime
+        # Check if a matching Veeam backup session was found
+        # If no session exists, return an error message.
+        # Otherwise, create a return object containing the relevant backup session data.
+        if ($null -eq $obVBRSession) {
 
-        if ($obVBRSession.JobType -eq 'VmTapeBackup') {
-            $obCustomReturn | Add-Member -MemberType NoteProperty -Name "BackupSize" -Value $obVBRSession.SessionInfo.BackUpTotalSize
-        }
-        elseif ($obVBRSession.JobType -eq 'Backup') {
-            $obCustomReturn | Add-Member -MemberType NoteProperty -Name "BackupSize" -Value $obVBRSession.SessionInfo.BackedUpSize
+            # Save text of the error message in the variable
+            $strErrorMessage = "Veeam Job gefunden. Job hat keine historischen Daten!"
+
+            # Create a data object
+            $objReturnData = "" | Select-Object -Property strErrorMessage
+            $objReturnData.strErrorMessage = $strErrorMessage
+
+            return $objReturnData
+        }        
+        else {
+            # Create a data object with the relevant data of the Veeam job
+            $obCustomReturn = New-Object -TypeName System.Object
+            $obCustomReturn | Add-Member -MemberType NoteProperty -Name "Result" -Value $obVBRSession.Result.ToString()
+            $obCustomReturn | Add-Member -MemberType NoteProperty -Name "AuxData" -Value $obVBRSession.AuxData
+            $obCustomReturn | Add-Member -MemberType NoteProperty -Name "CreationTime" -Value $obVBRSession.CreationTime
+            $obCustomReturn | Add-Member -MemberType NoteProperty -Name "EndTime" -Value $obVBRSession.EndTime
+            
+            if ($obVBRSession.JobType -eq 'VmTapeBackup') {
+                $obCustomReturn | Add-Member -MemberType NoteProperty -Name "BackupSize" -Value $obVBRSession.SessionInfo.BackUpTotalSize
+            }
+            elseif ($obVBRSession.JobType -eq 'Backup') {
+                $obCustomReturn | Add-Member -MemberType NoteProperty -Name "BackupSize" -Value $obVBRSession.SessionInfo.BackedUpSize
+            }
         }
         
         # Return the content of the variable to the main program
