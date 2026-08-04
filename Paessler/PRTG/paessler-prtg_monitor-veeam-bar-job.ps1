@@ -275,9 +275,11 @@ try {
         $obCustomReturn | Add-Member -MemberType NoteProperty -Name "AuxData" -Value $obVBRSession.AuxData
         $obCustomReturn | Add-Member -MemberType NoteProperty -Name "CreationTime" -Value $obVBRSession.CreationTime
         $obCustomReturn | Add-Member -MemberType NoteProperty -Name "EndTime" -Value $obVBRSession.EndTime
+
         if ($obVBRSession.JobType -eq 'VmTapeBackup') {
             $obCustomReturn | Add-Member -MemberType NoteProperty -Name "BackupSize" -Value $obVBRSession.SessionInfo.BackUpTotalSize
-        } elseif ($obVBRSession.JobType -eq 'Backup') {
+        }
+        elseif ($obVBRSession.JobType -eq 'Backup') {
             $obCustomReturn | Add-Member -MemberType NoteProperty -Name "BackupSize" -Value $obVBRSession.SessionInfo.BackedUpSize
         }
         
