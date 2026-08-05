@@ -305,6 +305,10 @@ $QueryResult = Invoke-Command -Computername $PrtgDevice -ArgumentList $timespan 
     $obCustomReturn = New-Object -TypeName System.Object
     [array] $aNspNspMessageTrack = @()
 
+    # Establish a connection to NoSpamProxy using the provided credentials.
+    # Stop script execution if the connection cannot be established.
+    Connect-Nsp -Credential $Credential -ErrorAction Stop
+
     # Fetch of NSP Message Tracking details ofe every Gateway Rolle
     Get-NspGatewayRole | Select-Object Name | ForEach-Object {  
         $NspGatewayRole = $_ 
