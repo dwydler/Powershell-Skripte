@@ -295,8 +295,13 @@ $Credential = [pscredential]::new(
 
 $QueryResult = Invoke-Command -Computername $PrtgDevice -ArgumentList $timespan -ScriptBlock {
        
-    # Declare variables
-    param($timespan)
+    # Receive the monitoring timespan and authentication credentials from Invoke-Command.
+    param(
+        $timespan,
+        $Credential
+    )
+
+    
     $obCustomReturn = New-Object -TypeName System.Object
 
     # Fetch of NSP Message Tracking details ofe every Gateway Rolle
