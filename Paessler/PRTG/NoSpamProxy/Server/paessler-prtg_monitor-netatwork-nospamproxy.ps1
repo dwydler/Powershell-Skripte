@@ -301,12 +301,11 @@ $QueryResult = Invoke-Command -Computername $PrtgDevice -ArgumentList $timespan 
         $Credential
     )
 
-    
+    # Declare variables
     $obCustomReturn = New-Object -TypeName System.Object
-
-    # Fetch of NSP Message Tracking details ofe every Gateway Rolle
     [array] $aNspNspMessageTrack = @()
 
+    # Fetch of NSP Message Tracking details ofe every Gateway Rolle
     Get-NspGatewayRole | Select-Object Name | ForEach-Object {  
         $NspGatewayRole = $_ 
         
