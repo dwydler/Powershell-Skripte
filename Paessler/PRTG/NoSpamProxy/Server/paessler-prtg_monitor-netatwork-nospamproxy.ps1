@@ -293,7 +293,7 @@ $Credential = [pscredential]::new(
 ### Query all existing NoSpamProxy Gateways
 ###
 
-$QueryResult = Invoke-Command -Computername $PrtgDevice -ArgumentList $timespan -ScriptBlock {
+$QueryResult = Invoke-Command -Computername $PrtgDevice -ArgumentList $timespan, $Credential -ScriptBlock {
        
     # Receive the monitoring timespan and authentication credentials from Invoke-Command.
     param(
