@@ -281,6 +281,14 @@ if ($null -ne $QueryResult) {
     Set-PrtgError $QueryResult
 }
 
+# Create a PSCredential object from the provided username and plaintext password
+# for authentication with Connect-NSP using Basic Authentication.
+$Credential = [pscredential]::new(
+    $Username,
+    (ConvertTo-SecureString $Password -AsPlainText -Force)
+)
+
+
 ###
 ### Query all existing NoSpamProxy Gateways
 ###
