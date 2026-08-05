@@ -81,7 +81,21 @@ Param (
         Position=1,
         Mandatory=$false
     )]
-   [int] $intMinutes
+   [int] $intMinutes,
+
+   [Parameter(
+        ValueFromPipelineByPropertyName,
+        Position=2,
+        Mandatory=$false
+    )]
+   [string] $Username,
+
+   [Parameter(
+        ValueFromPipelineByPropertyName,
+        Position=3,
+        Mandatory=$false
+    )]
+   [string] $Password
 )
 
 Clear-Host
