@@ -219,10 +219,12 @@ try {
             # Save text of the error message in the variable
             $strErrorMessage = $_.Exception.Message
 
-            $objReturnData = "" | Select-Object -Property strErrorMessage, strTrace
-            $objReturnData.strErrorMessage = $strErrorMessage
-            $objReturnData.strTrace = $strTrace
-            
+            # Create a data object
+            $objReturnData = [PSCustomObject]@{
+                strErrorMessage = $strErrorMessage
+                strTrace        = $strTrace
+            }
+
             # Return the content of the variable to the main program
             return $objReturnData
         }
