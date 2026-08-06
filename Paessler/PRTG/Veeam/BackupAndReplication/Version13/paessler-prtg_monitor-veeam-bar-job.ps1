@@ -303,14 +303,7 @@ try {
             # Return the content of the variable to the main program
             return $objReturnData
         }        
-        else {
-            # Create a data object with the relevant data of the Veeam job
-            $obCustomReturn = New-Object -TypeName System.Object
-            $obCustomReturn | Add-Member -MemberType NoteProperty -Name "Result" -Value $obVBRSession.Result.ToString()
-            $obCustomReturn | Add-Member -MemberType NoteProperty -Name "AuxData" -Value $obVBRSession.AuxData
-            $obCustomReturn | Add-Member -MemberType NoteProperty -Name "CreationTime" -Value $obVBRSession.CreationTime
-            $obCustomReturn | Add-Member -MemberType NoteProperty -Name "EndTime" -Value $obVBRSession.EndTime
-            
+        else {            
             # Determine the backup size property depending on the Veeam job type.
             $backupSize = switch ($obVBRSession.JobType) {
 
@@ -325,6 +318,15 @@ try {
                 default {
                     $null
                 }
+            }
+
+            # Create a data object with the relevant data of the Veeam job
+            $obCustomReturn = [PSCustomObject]@{
+                Result       = $obVBRSession.Result.ToString()
+                AuxData      = $obVBRSession.AuxData
+                CreationTime = $obVBRSession.CreationTime
+                EndTime      = $obVBRSession.EndTime
+                BackupSize   = $backupSize
             }
         }
         
