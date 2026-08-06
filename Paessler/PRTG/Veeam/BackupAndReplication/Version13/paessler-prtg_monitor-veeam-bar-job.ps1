@@ -311,11 +311,20 @@ try {
             $obCustomReturn | Add-Member -MemberType NoteProperty -Name "CreationTime" -Value $obVBRSession.CreationTime
             $obCustomReturn | Add-Member -MemberType NoteProperty -Name "EndTime" -Value $obVBRSession.EndTime
             
-            if ($obVBRSession.JobType -eq 'VmTapeBackup') {
-                $obCustomReturn | Add-Member -MemberType NoteProperty -Name "BackupSize" -Value $obVBRSession.SessionInfo.BackUpTotalSize
-            }
-            elseif ($obVBRSession.JobType -eq 'Backup') {
-                $obCustomReturn | Add-Member -MemberType NoteProperty -Name "BackupSize" -Value $obVBRSession.SessionInfo.BackedUpSize
+            # Determine the backup size property depending on the Veeam job type.
+            $backupSize = switch ($obVBRSession.JobType) {
+
+                'VmTapeBackup' {
+                    $obVBRSession.SessionInfo.BackUpTotalSize
+                }
+
+                'Backup' {
+                    $obVBRSession.SessionInfo.BackedUpSize
+                }
+
+                default {
+                    $null
+                }
             }
         }
         
