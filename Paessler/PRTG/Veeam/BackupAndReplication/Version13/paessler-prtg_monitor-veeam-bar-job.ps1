@@ -296,8 +296,9 @@ try {
             $strErrorMessage = "Veeam Job gefunden. Job hat keine historischen Daten!"
 
             # Create a data object
-            $objReturnData = "" | Select-Object -Property strErrorMessage
-            $objReturnData.strErrorMessage = $strErrorMessage
+            $objReturnData = [PSCustomObject]@{
+                strErrorMessage = $strErrorMessage
+            }
 
             return $objReturnData
         }        
