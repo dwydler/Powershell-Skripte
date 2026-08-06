@@ -278,9 +278,10 @@ try {
             $strErrorMessage = "Keinen Veeam Job mit dem Namen `"$strVeeamBackupJobName`" gefunden!"
 
             # Create a data object
-            $objReturnData = "" | Select-Object -Property strErrorMessage, strTrace
-            $objReturnData.strErrorMessage = $strErrorMessage
-            $objReturnData.strTrace = $strTrace
+            $objReturnData = [PSCustomObject]@{
+                strErrorMessage = $strErrorMessage
+                strTrace        = $strTrace
+            }
             
             # Return the content of the variable to the main program
             return $objReturnData
