@@ -215,12 +215,15 @@ try {
             Import-Module Veeam.Backup.PowerShell -ErrorAction Stop
         }
         catch {
+
+            # Save text of the error message in the variable
             $strErrorMessage = $_.Exception.Message
 
             $objReturnData = "" | Select-Object -Property strErrorMessage, strTrace
             $objReturnData.strErrorMessage = $strErrorMessage
             $objReturnData.strTrace = $strTrace
             
+            # Return the content of the variable to the main program
             return $objReturnData
         }
 
