@@ -300,6 +300,7 @@ try {
                 strErrorMessage = $strErrorMessage
             }
 
+            # Return the content of the variable to the main program
             return $objReturnData
         }        
         else {
