@@ -199,7 +199,7 @@ function Set-PrtgResult {
 
 ### The following commands will be executed on the remote computer
 try {
-    $objQueryResult = Invoke-command -ComputerName $PrtgDevice -Args $VeeamBRJobName -ScriptBlock {
+    $objQueryResult = Invoke-command -ComputerName $PrtgDevice -ArgumentList $VeeamBRJobName -ScriptBlock {
 
         # Declarations
         param(
