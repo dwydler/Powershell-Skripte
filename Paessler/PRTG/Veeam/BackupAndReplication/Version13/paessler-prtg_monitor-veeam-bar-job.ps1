@@ -206,132 +206,140 @@ try {
             [string] $strVeeamBackupJobName
         )
 
-        [string] $strErrorMessage = $null
-        [string] $strTrace = $null
-        
+        pwsh.exe -NoProfile -Args $strVeeamBackupJobName -Command {
 
-        # Add the Veeam Powershell Module to the current session
-        try {
-            Import-Module Veeam.Backup.PowerShell -ErrorAction Stop
-        }
-        catch {
+            # Declarations
+            param (
+                [string] $strVeeamBackupJobName
+            )
 
-            # Save text of the error message in the variable
-            $strErrorMessage = $_.Exception.Message
-
-            # Create a data object
-            $objReturnData = [PSCustomObject]@{
-                strErrorMessage = $strErrorMessage
-                strTrace        = $strTrace
-            }
-
-            # Return the content of the variable to the main program
-            return $objReturnData
-        }
-
-        # Check if the job name is a Computer Backup object.
-        $strVeeamBackupJobId = Get-VBRComputerBackupJob -Name $strVeeamBackupJobName -ErrorAction SilentlyContinue
-
-        if ($strVeeamBackupJobId) {
-
-            # Read the last execution result of the specified Veeam backup job
-            $sessionName = "$($strVeeamBackupJobId.Name) - $($strVeeamBackupJobId.BackupObject)"
-            $obVBRSession = Get-VBRComputerBackupJobSession | Where-Object { $_.Name -eq $sessionName } | Sort-Object CreationTime -Descending | Select-Object -First 1
-        }
-
-        # Check if the job name is Backup Copy object.
-        $strVeeamBackupJobId = Get-VBRBackupCopyJob -Name "$strVeeamBackupJobName" -ErrorAction SilentlyContinue
-
-        if ($strVeeamBackupJobId) {
-
-            # Read the last execution result of the specified Veeam backup job
-            $sessionName = "$($strVeeamBackupJobId.Name) - $($strVeeamBackupJobId.BackupObject)"
-            $obVBRSession = Get-VBRBackupSession | Where-Object { $_.JobName -match "$strVeeamBackupJobName" } | Sort-Object -Descending -Property "CreationTime" | Select-Object -First 1
-        }        
-
-        # Check if the job name is a Backup & Replication Entpoint object.
-        elseif (Get-VBREPJob -Name $strVeeamBackupJobName -ErrorAction SilentlyContinue) {
-
-            # Read the last execution result of the specified Veeam backup job
-            $strVeeamBackupJobId = Get-VBREPJob -Name $strVeeamBackupJobName | Select-Object -ExpandProperty Id
-            $obVBRSession = Get-VBREPSession | Where-Object { $_.JobId -eq $strVeeamBackupJobId } | Sort-Object -Descending -Property "CreationTime" | Select-Object -First 1
-        }
-
-        # Check if the job name is a Backup & Replication object.
-        elseif (Get-VBRJob -Name $strVeeamBackupJobName  -ErrorAction SilentlyContinue) {
-
-            # Read the last execution result of the specified Veeam backup job
-            $obVBRSession = Get-VBRBackupSession | Where-Object { $_.JobName -match "$strVeeamBackupJobName" } | Sort-Object -Descending -Property "CreationTime" | Select-Object -First 1
-        }
-
-        # Check if the job name is a Backup & Replication Tape object
-        elseif (Get-VBRTapeJob -Name $strVeeamBackupJobName -ErrorAction SilentlyContinue) {
-
-            # Read the last execution result of the specified Veeam backup job
-            $strVeeamBackupJobId = Get-VBRTapeJob -Name $strVeeamBackupJobName | Select-Object -ExpandProperty Id
-            $obVBRSession = Get-VBRBackupSession | Where-Object { $_.JobId -eq $strVeeamBackupJobId } | Sort-Object -Descending -Property "CreationTime" | Select-Object -First 1
-        }
-        # Matches if all previous queries have failed
-        else {
-
-            # Save text of the error message in the variable
-            $strErrorMessage = "Keinen Veeam Job mit dem Namen `"$strVeeamBackupJobName`" gefunden!"
-
-            # Create a data object
-            $objReturnData = [PSCustomObject]@{
-                strErrorMessage = $strErrorMessage
-                strTrace        = $strTrace
-            }
+            [string] $strErrorMessage = $null
+            [string] $strTrace = $null
             
-            # Return the content of the variable to the main program
-            return $objReturnData
-        }
 
-        # Check if a matching Veeam backup session was found
-        # If no session exists, return an error message.
-        # Otherwise, create a return object containing the relevant backup session data.
-        if ($null -eq $obVBRSession) {
+            # Add the Veeam Powershell Module to the current session
+            try {
+                Import-Module Veeam.Backup.PowerShell -ErrorAction Stop
+            }
+            catch {
 
-            # Save text of the error message in the variable
-            $strErrorMessage = "Veeam Job gefunden. Job hat keine historischen Daten!"
+                # Save text of the error message in the variable
+                $strErrorMessage = $_.Exception.Message
 
-            # Create a data object
-            $objReturnData = [PSCustomObject]@{
-                strErrorMessage = $strErrorMessage
+                # Create a data object
+                $objReturnData = [PSCustomObject]@{
+                    strErrorMessage = $strErrorMessage
+                    strTrace        = $strTrace
+                }
+
+                # Return the content of the variable to the main program
+                return $objReturnData
+            }
+
+            # Check if the job name is a Computer Backup object.
+            $strVeeamBackupJobId = Get-VBRComputerBackupJob -Name $strVeeamBackupJobName -ErrorAction SilentlyContinue
+
+            if ($strVeeamBackupJobId) {
+
+                # Read the last execution result of the specified Veeam backup job
+                $sessionName = "$($strVeeamBackupJobId.Name) - $($strVeeamBackupJobId.BackupObject)"
+                $obVBRSession = Get-VBRComputerBackupJobSession | Where-Object { $_.Name -eq $sessionName } | Sort-Object CreationTime -Descending | Select-Object -First 1
+            }
+
+            # Check if the job name is Backup Copy object.
+            $strVeeamBackupJobId = Get-VBRBackupCopyJob -Name "$strVeeamBackupJobName" -ErrorAction SilentlyContinue
+
+            if ($strVeeamBackupJobId) {
+
+                # Read the last execution result of the specified Veeam backup job
+                $sessionName = "$($strVeeamBackupJobId.Name) - $($strVeeamBackupJobId.BackupObject)"
+                $obVBRSession = Get-VBRBackupSession | Where-Object { $_.JobName -match "$strVeeamBackupJobName" } | Sort-Object -Descending -Property "CreationTime" | Select-Object -First 1
+            }        
+
+            # Check if the job name is a Backup & Replication Entpoint object.
+            elseif (Get-VBREPJob -Name $strVeeamBackupJobName -ErrorAction SilentlyContinue) {
+
+                # Read the last execution result of the specified Veeam backup job
+                $strVeeamBackupJobId = Get-VBREPJob -Name $strVeeamBackupJobName | Select-Object -ExpandProperty Id
+                $obVBRSession = Get-VBREPSession | Where-Object { $_.JobId -eq $strVeeamBackupJobId } | Sort-Object -Descending -Property "CreationTime" | Select-Object -First 1
+            }
+
+            # Check if the job name is a Backup & Replication object.
+            elseif (Get-VBRJob -Name $strVeeamBackupJobName  -ErrorAction SilentlyContinue) {
+
+                # Read the last execution result of the specified Veeam backup job
+                $obVBRSession = Get-VBRBackupSession | Where-Object { $_.JobName -match "$strVeeamBackupJobName" } | Sort-Object -Descending -Property "CreationTime" | Select-Object -First 1
+            }
+
+            # Check if the job name is a Backup & Replication Tape object
+            elseif (Get-VBRTapeJob -Name $strVeeamBackupJobName -ErrorAction SilentlyContinue) {
+
+                # Read the last execution result of the specified Veeam backup job
+                $strVeeamBackupJobId = Get-VBRTapeJob -Name $strVeeamBackupJobName | Select-Object -ExpandProperty Id
+                $obVBRSession = Get-VBRBackupSession | Where-Object { $_.JobId -eq $strVeeamBackupJobId } | Sort-Object -Descending -Property "CreationTime" | Select-Object -First 1
+            }
+            # Matches if all previous queries have failed
+            else {
+
+                # Save text of the error message in the variable
+                $strErrorMessage = "Keinen Veeam Job mit dem Namen `"$strVeeamBackupJobName`" gefunden!"
+
+                # Create a data object
+                $objReturnData = [PSCustomObject]@{
+                    strErrorMessage = $strErrorMessage
+                    strTrace        = $strTrace
+                }
+                
+                # Return the content of the variable to the main program
+                return $objReturnData
+            }
+
+            # Check if a matching Veeam backup session was found
+            # If no session exists, return an error message.
+            # Otherwise, create a return object containing the relevant backup session data.
+            if ($null -eq $obVBRSession) {
+
+                # Save text of the error message in the variable
+                $strErrorMessage = "Veeam Job gefunden. Job hat keine historischen Daten!"
+
+                # Create a data object
+                $objReturnData = [PSCustomObject]@{
+                    strErrorMessage = $strErrorMessage
+                }
+
+                # Return the content of the variable to the main program
+                return $objReturnData
+            }        
+            else {            
+                # Determine the backup size property depending on the Veeam job type.
+                $backupSize = switch ($obVBRSession.JobType) {
+
+                    'VmTapeBackup' {
+                        $obVBRSession.SessionInfo.BackUpTotalSize
+                    }
+
+                    'Backup' {
+                        $obVBRSession.SessionInfo.BackedUpSize
+                    }
+
+                    default {
+                        $null
+                    }
+                }
+
+                # Create a data object with the relevant data of the Veeam job
+                $obCustomReturn = [PSCustomObject]@{
+                    Result       = $obVBRSession.Result.ToString()
+                    AuxData      = $obVBRSession.AuxData
+                    CreationTime = $obVBRSession.CreationTime
+                    EndTime      = $obVBRSession.EndTime
+                    BackupSize   = $backupSize
+                }
             }
 
             # Return the content of the variable to the main program
-            return $objReturnData
-        }        
-        else {            
-            # Determine the backup size property depending on the Veeam job type.
-            $backupSize = switch ($obVBRSession.JobType) {
-
-                'VmTapeBackup' {
-                    $obVBRSession.SessionInfo.BackUpTotalSize
-                }
-
-                'Backup' {
-                    $obVBRSession.SessionInfo.BackedUpSize
-                }
-
-                default {
-                    $null
-                }
-            }
-
-            # Create a data object with the relevant data of the Veeam job
-            $obCustomReturn = [PSCustomObject]@{
-                Result       = $obVBRSession.Result.ToString()
-                AuxData      = $obVBRSession.AuxData
-                CreationTime = $obVBRSession.CreationTime
-                EndTime      = $obVBRSession.EndTime
-                BackupSize   = $backupSize
-            }
+            return $obCustomReturn
         }
-        
-        # Return the content of the variable to the main program
-        return $obCustomReturn
 
     } -ErrorAction Stop
 }
