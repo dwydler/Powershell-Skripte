@@ -230,11 +230,13 @@ try {
         }
 
         # Check if the job name is a Computer Backup object.
-        if (Get-VBRComputerBackupJob -Name $strVeeamBackupJobName  -ErrorAction SilentlyContinue) {
+        $strVeeamBackupJobId = Get-VBRComputerBackupJob -Name $strVeeamBackupJobName -ErrorAction SilentlyContinue
+
+        if ($strVeeamBackupJobId) {
 
             # Read the last execution result of the specified Veeam backup job
-            $strVeeamBackupJobId = Get-VBRComputerBackupJob -Name $strVeeamBackupJobName | Select-Object -ExpandProperty Id
-            $obVBRSession = Get-VBRComputerBackupJobSession | Where-Object { $_.JobId -eq $strVeeamBackupJobId } | Sort-Object -Descending -Property "CreationTime" | Select-Object -First 1
+            $sessionName = "$($strVeeamBackupJobId.Name) - $($strVeeamBackupJobId.BackupObject)"
+            $obVBRSession = Get-VBRComputerBackupJobSession | Where-Object { $_.Name -eq $sessionName } | Sort-Object CreationTime -Descending | Select-Object -First 1
         }
 
         # Check if the job name is a Backup & Replication Entpoint object.
